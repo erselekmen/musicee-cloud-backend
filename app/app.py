@@ -6,6 +6,10 @@ from app import Item
 
 app = FastAPI()
 
+class Item(BaseModel):
+    name: str
+    description: str
+
 @app.get("/")
 async def read_root():
     return {"Hello": "World"}
