@@ -14,7 +14,7 @@ class Item(BaseModel):
 
 @app.on_event("startup")
 async def startup_db_client():
-    app.mongodb_client = AsyncIOMotorClient(DATABASE_URLZ)
+    app.mongodb_client = AsyncIOMotorClient(DATABASE_URL)
     app.mongodb = app.mongodb_client.ItemDB
 
 @app.on_event("shutdown")
