@@ -1,13 +1,12 @@
-from flask import Flask
-from flask_restplus import Api, Resource
+from motor.motor_asyncio import AsyncIOMotorClient
 
-app = Flask(__name__)
-api = Api(app, version='1.0', title='Musicee API',
-          description='Musicee API documentation powered by Flask RestPlus API')
+DATABASE_URL = "mongodb://mongo:27017"  # Using the Docker service name `mongo`
+database = None
 
-ns = api.namespace('my_namespace', description='My operations')
+async def get_database():
+    global database
+    client = AsyncIOMotorClient(DATABASE_URL)
+    database = client.mydatabase  # Use your desired database name here
 
-@ns.route('/hello')
-class HelloWorld(Resource):
-    def get(self):
-        return {'hello': 'world'}
+async def close_database():
+    database.client.close()
