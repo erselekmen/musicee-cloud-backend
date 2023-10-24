@@ -1,6 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 
-DATABASE_URL = "mongodb://mongo:27017"  # Using the Docker service name `mongo`
+DATABASE_URL = "mongodb+srv://erselekmen:VV4J5jV9&q*3XrY@cluster0.eh8uyv7.mongodb.net/?retryWrites=true&w=majority"  # Using the Docker service name `mongo`
 database = None
 
 async def get_database():
