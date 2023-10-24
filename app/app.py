@@ -2,7 +2,6 @@ from http.client import HTTPException
 from fastapi import FastAPI
 from app.db import get_database, close_database
 from pydantic import BaseModel
-from app import Item
 
 app = FastAPI()
 
