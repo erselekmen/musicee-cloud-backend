@@ -1,0 +1,30 @@
+{
+    "AWSEBDockerrunVersion": "1",
+    "containerDefinitions": [
+      {
+        "name": "webapp",
+        "image": "musicee-backend-web",
+        "essential": true,
+        "memory": 128,
+        "portMappings": [
+          {
+            "hostPort": 5000,
+            "containerPort": 5000
+          }
+        ]
+      },
+      {
+        "name": "database",
+        "image": "mongo:latest",
+        "essential": true,
+        "memory": 128,
+        "portMappings": [
+          {
+            "hostPort": 27017,
+            "containerPort": 27017
+          }
+        ]
+      }
+    ]
+  }
+  
