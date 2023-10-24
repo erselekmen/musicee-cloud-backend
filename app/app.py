@@ -4,7 +4,6 @@ from app.db import get_database, close_database
 from pydantic import BaseModel
 
 app = FastAPI()
-
 class Item(BaseModel):
     name: str
     description: str
@@ -13,7 +12,7 @@ class Item(BaseModel):
 async def read_root():
     return {"Hello": "World"}
 
-@app.post("/items/", response_model=Item, status_code=status.HTTP_201_CREATED)
+@app.post("/items/", response_model=Item)
 async def create_item(item: Item):
     existing_item = await app.mongodb.items.find_one({"name": item.name})
     if existing_item:
