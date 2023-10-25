@@ -2,11 +2,12 @@ from fastapi import FastAPI, status, Depends, HTTPException
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
 
-app = FastAPI()
 
 class Item(BaseModel):
     song: str
     artist: str
+
+app = FastAPI()
 
 
 @app.post("/add_song/", response_model=Item)
