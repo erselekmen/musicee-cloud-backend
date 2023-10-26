@@ -1,4 +1,6 @@
 fastapi
+python-jose
+passlib
 uvicorn
 motor
 pymongo
