@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.db import *
 
-SECRET_KEY = ""
+SECRET_KEY = "83daa0256a228960fb23693bf1f6034d44396675749244721a2b20e896e11662"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE = 15
 
