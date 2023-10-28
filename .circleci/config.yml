@@ -10,4 +10,4 @@ workflows:
           filters:
             branches:
               only:
-                - main
+                - production
