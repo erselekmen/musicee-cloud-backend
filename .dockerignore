@@ -4,3 +4,8 @@
 
 # Docker
 .docker
+
+.circleci
+.ebextensions
+.elasticbeanstalk
+Procfile
