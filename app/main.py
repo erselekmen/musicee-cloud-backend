@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.db import *
 
-SECRET_KEY = "83daa0256a228960fb23693bf1f6034d44396675749244721a2b20e896e11662"
+SECRET_KEY = "$2b$12$ISR1EF6ygOrdyy0xrvXvc.MY6L1MFu2W.QieagX3Uvh68nOeFfA8G"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE = 15
 
@@ -25,6 +25,7 @@ class User(BaseModel):
     disabled: bool or None = None
 
 class UserDB(User):
+    username: str
     hashed_password: str
 
 class Item(BaseModel):
@@ -131,8 +132,10 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
 async def read_own_items(current_user: User = Depends (get_current_active_user)):
     return [{"item_id": 1, "owner": current_user}]
 
-
-
+"""
+pwd = get_password_hash("ersel123")
+print(pwd)
+"""
 
 
 """
