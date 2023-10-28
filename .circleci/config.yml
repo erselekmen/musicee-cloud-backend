@@ -5,9 +5,9 @@ workflows:
   elastic-beanstalk-workflow:
     jobs:
       - aws-elastic-beanstalk/deploy:
-          environment-name: musicee-prod
+          environment-name: musicee-dev
           application-name: musicee-backend
           filters:
             branches:
               only:
-                - main
+                - development
