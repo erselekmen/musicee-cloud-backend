@@ -42,7 +42,7 @@ def get_password_hash(password):
 
 
 async def get_user(username: str):
-    user = await app.mongodb.items.find_one({"song": username})
+    user = await app.mongodb.items.find_one({"username": username})
     
     if user is not None:
         user_data = user
