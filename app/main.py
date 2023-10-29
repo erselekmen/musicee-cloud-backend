@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.db import *
 
-SECRET_KEY = "$2b$12$ISR1EF6ygOrdyy0xrvXvc.MY6L1MFu2W.QieagX3Uvh68nOeFfA8G"
+SECRET_KEY = "5074939caf77f57e3c266304ed350f01863fd18b8ea04afe6c95b621ab6bfca5"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE = 15
 
@@ -22,8 +22,11 @@ class User(BaseModel):
     username: str
     email: str or None = None
     full_name: str or None = None
-    hashed_password: str
     disabled: bool or None = None
+
+class UserDB(User):
+    hashed_password: str
+
 
 class Item(BaseModel):
     song: str
@@ -42,11 +45,11 @@ def get_password_hash(password):
 
 
 async def get_user(username: str):
-    user = await app.mongodb.items.find_one({"username": username})
+    user = await app.mongodb.items.find_one({"song": username})
     
-    if user is not None:
-        user_data = user
-        return User(**user_data)
+    if username in user:
+        user_data = user[username]
+        return UserDB(**user_data)
     
     raise HTTPException(status_code=404, detail="User not found")
 
@@ -101,7 +104,7 @@ async def get_current_user(token: str = Depends(oauth_2_scheme)):
     
     return user
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)):
+async def get_current_active_user(current_user: UserDB = Depends(get_current_user)):
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     
