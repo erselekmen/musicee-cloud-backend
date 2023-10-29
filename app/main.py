@@ -22,11 +22,8 @@ class User(BaseModel):
     username: str
     email: str or None = None
     full_name: str or None = None
-    disabled: bool or None = None
-
-class UserDB(User):
-    username: str
     hashed_password: str
+    disabled: bool or None = None
 
 class Item(BaseModel):
     song: str
@@ -49,7 +46,7 @@ async def get_user(username: str):
     
     if user is not None:
         user_data = user
-        return UserDB(**user_data)
+        return User(**user_data)
     
     raise HTTPException(status_code=404, detail="User not found")
 
@@ -104,7 +101,7 @@ async def get_current_user(token: str = Depends(oauth_2_scheme)):
     
     return user
 
-async def get_current_active_user(current_user: UserDB = Depends(get_current_user)):
+async def get_current_active_user(current_user: User = Depends(get_current_user)):
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     
