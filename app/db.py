@@ -2,7 +2,10 @@ from fastapi import FastAPI, status, Depends, HTTPException
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
 
-DATABASE_URL = "mongodb+srv://erselekmen:VV4J5jV9&q*3XrY@cluster0.eh8uyv7.mongodb.net/?retryWrites=true&w=majority"
+username = "erselekmen"
+password = "VV4J5jV9&q*3XrY"
+
+DATABASE_URL = "mongodb+srv://"+username+":"+password+"@cluster0.eh8uyv7.mongodb.net/?retryWrites=true&w=majority"
 database = None
 
 app = FastAPI()
