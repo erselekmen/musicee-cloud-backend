@@ -1,18 +1,67 @@
 from fastapi import FastAPI, status, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.responses import RedirectResponse
 from datetime import datetime, timedelta
 from pydantic import BaseModel
-from motor.motor_asyncio import AsyncIOMotorClient
+from uuid import uuid4
 from app.db import *
+from app.schema import *
+from app.utils import (
+    get_hashed_password,
+    create_access_token,
+    create_refresh_token,
+    verify_password
+)
+
+@app.post('/signup', summary="Create new user", response_model=UserResponseAuth)
+async def create_user(data: User):
+    # querying database to check if user already exist
+    existing_user = await app.mongodb.users.find_one({"email": data.email})
+
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Item already exists")
+    
+    user = {
+        "email": data.email,
+        "password": get_hashed_password(data.password) 
+    }
+    
+    await app.mongodb.users.insert_one(user)
+    return {
+        "email": data.email,
+        "status": 200
+    }
 
 
-@app.post("/create_user/", response_model=User)
+@app.post('/login', summary="Create access and refresh tokens for user", response_model=UserResponseAuth)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = await app.mongodb.users.find_one({"email": form_data.email})
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect email or password"
+        )
+
+    hashed_pass = user['password']
+    if not verify_password(form_data.password, hashed_pass):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect email or password"
+        )
+    
+    return {
+        "access_token": create_access_token(user['email']),
+        "refresh_token": create_refresh_token(user['email']),
+    }
+
+
+"""@app.post("/create_user/", response_model=User)
 async def create_user(user: User):
     existing_user = await app.mongodb.users.find_one({"username": user.username})
     if existing_user:
         raise HTTPException(status_code=400, detail="Item already exists")
     await app.mongodb.users.insert_one(user.dict())
-    return user
+    return user"""
 
 """
 pwd = get_password_hash("ersel123")
