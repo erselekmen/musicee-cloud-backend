@@ -9,7 +9,7 @@ DATABASE_URL = "mongodb+srv://" + username + ":" + password + "@cluster0.eh8uyv7
 
 app = FastAPI()
 
-@app.lifespan("startup")
+@app.on_event("startup")
 async def startup_db_client():
     app.mongodb_client = AsyncIOMotorClient(DATABASE_URL)
     app.mongodb = app.mongodb_client.users
