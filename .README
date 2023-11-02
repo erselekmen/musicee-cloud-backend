@@ -1,0 +1,14 @@
+### You can start the app in your local by creating a volume:
+docker run --name musicee-backend -p 8000:8000 -d -v $(pwd):/app musicee-backend-web
+
+### You can rebuild the app if any new library, package installed or any Docker configurations made:
+docker compose build 
+
+### You can list all running Docker images:
+docker ps
+
+### You can stop any running Docker images:
+docker stop <image-name-here>
+
+### You can remove any inactive Docker images:
+docker rm <image-name-here>
