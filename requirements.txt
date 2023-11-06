@@ -7,3 +7,5 @@ pymongo
 pydantic
 status
 python-multipart
+bcrypt
+jose
