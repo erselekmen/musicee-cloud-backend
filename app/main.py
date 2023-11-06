@@ -1,9 +1,6 @@
-from fastapi import FastAPI, status, Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.responses import RedirectResponse
-from datetime import datetime, timedelta
-from pydantic import BaseModel
-from uuid import uuid4
+from fastapi.exception_handlers import HTTPException
+from fastapi import Depends, status
+from fastapi.security import OAuth2PasswordRequestForm
 from app.db import *
 from app.schema import *
 from app.utils import (
@@ -13,7 +10,8 @@ from app.utils import (
     verify_password
 )
 
-@app.post('/signup', summary="Create new user", response_model=UserResponseAuth)
+
+@app.post('/signup', summary="Create new user")
 async def create_user(data: User):
     # querying database to check if user already exist
     existing_user = await app.mongodb.users.find_one({"email": data.email})
@@ -33,9 +31,9 @@ async def create_user(data: User):
     }
 
 
-@app.post('/login', summary="Create access and refresh tokens for user", response_model=UserResponseAuth)
+@app.post('/login', summary="Create access and refresh tokens for user")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await app.mongodb.users.find_one({"email": form_data.email})
+    user = await app.mongodb.users.find_one({"email": form_data.username})
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
