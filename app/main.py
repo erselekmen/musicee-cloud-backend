@@ -11,7 +11,7 @@ from app.utils import (
 )
 
 
-@app.post('/signup', summary="Create new user")
+@app.post('/signup', summary="Create a new user")
 async def create_user(data: User):
     # querying database to check if user already exist
     existing_user = await app.mongodb.users.find_one({"email": data.email})
