@@ -11,19 +11,19 @@ from app.utils import (
 )
 
 
-@app.post('/signup', summary="Create new user")
+@app.post('/signup', summary="Create a new user")
 async def create_user(data: User):
     # querying database to check if user already exist
     existing_user = await app.mongodb.users.find_one({"email": data.email})
 
     if existing_user:
         raise HTTPException(status_code=400, detail="Item already exists")
-    
+
     user = {
         "email": data.email,
-        "password": get_hashed_password(data.password) 
+        "password": get_hashed_password(data.password)
     }
-    
+
     await app.mongodb.users.insert_one(user)
     return {
         "email": data.email,
@@ -46,11 +46,38 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password"
         )
-    
+
     return {
         "access_token": create_access_token(user['email']),
         "refresh_token": create_refresh_token(user['email']),
     }
+
+tracks = []
+@app.post("/tracks")
+async def add_track(track: Track):
+    global tracks
+    tracks.append(track)
+    return {"message": "Track added successfully."}
+@app.put("/tracks/{track_id}")
+async def update_track(track_id: int, updated_feature: str):
+    global tracks
+    for track in tracks:
+        if track.track_id == track_id:
+            # Update the track's feature
+            track.track_name = updated_feature
+            return {"message": f"Track with ID {track_id} has been updated."}
+    return {"error": f"Track with ID {track_id} not found."}
+@app.delete("/tracks/{track_id}")
+async def delete_track(track_id: int):
+    global tracks
+    for track in tracks:
+        if track.track_id == track_id:
+            tracks.remove(track)
+            return {"message": f"Track with ID {track_id} has been deleted."}
+    raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found.")
+@app.get("/tracks")
+async def get_tracks():
+    return tracks
 
 
 """@app.post("/create_user/", response_model=User)
@@ -65,7 +92,6 @@ async def create_user(user: User):
 pwd = get_password_hash("ersel123")
 print(pwd)
 """
-
 
 """class Item(BaseModel):
     song: str
