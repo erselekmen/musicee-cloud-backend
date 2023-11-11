@@ -1,9 +1,12 @@
-from pydantic import BaseModel, EmailStr, constr
+from pydantic import BaseModel, EmailStr
 
 
 class User(BaseModel):
     email: EmailStr
     password: str
+
+
+"""_id: find_one({'_id': ObjectId(str(user_id))})"""
 
 
 class Track(BaseModel):
