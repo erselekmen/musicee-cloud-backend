@@ -20,7 +20,7 @@ def verify_password(password: str, hashed_pass: str) -> bool:
     return password_context.verify(password, hashed_pass)
 
 
-def create_access_token(subject: Union[str, Any], expires_delta: int = None) -> str:
+def create_access_token(subject: Union[str, Any], expires_delta: timedelta = None) -> str:
     if expires_delta is not None:
         expires_delta = datetime.utcnow() + expires_delta
     else:
@@ -31,7 +31,7 @@ def create_access_token(subject: Union[str, Any], expires_delta: int = None) -> 
     return encoded_jwt
 
 
-def create_refresh_token(subject: Union[str, Any], expires_delta: int = None) -> str:
+def create_refresh_token(subject: Union[str, Any], expires_delta: timedelta = None) -> str:
     if expires_delta is not None:
         expires_delta = datetime.utcnow() + expires_delta
     else:
