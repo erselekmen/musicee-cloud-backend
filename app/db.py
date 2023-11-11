@@ -12,4 +12,4 @@ app = FastAPI()
 @app.on_event("startup")
 async def startup_db_client():
     app.mongodb_client = AsyncIOMotorClient(DATABASE_URL)
-    app.mongodb = app.mongodb_client.users
+    app.mongodb = app.mongodb_client.musicee_db
