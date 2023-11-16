@@ -32,8 +32,8 @@ async def create_user(data: User):
 
 
 @app.post('/user/login', summary="Create access and refresh tokens for user")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await app.mongodb.users.find_one({"email": form_data.username})
+async def login(data: User):
+    user = await app.mongodb.users.find_one({"email": data.email})
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -41,7 +41,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         )
 
     hashed_pass = user['password']
-    if not verify_password(form_data.password, hashed_pass):
+    if not verify_password(data.password, hashed_pass):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password"
