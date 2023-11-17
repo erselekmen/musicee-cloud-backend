@@ -3,7 +3,7 @@ from fastapi import FastAPI
 
 username = "erselekmen"
 password = "VV4J5jV9&q*3XrY"
-MONGO_INITDB_DATABASE = "users"
+MONGO_INITDB_DATABASE = "musicee_db"
 DATABASE_URL = "mongodb+srv://" + username + ":" + password + "@cluster0.eh8uyv7.mongodb.net/?retryWrites=true&w=majority"
 
 app = FastAPI()
