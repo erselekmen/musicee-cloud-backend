@@ -6,9 +6,6 @@ class User(BaseModel):
     password: str
 
 
-"""_id: find_one({'_id': ObjectId(str(user_id))})"""
-
-
 class Track(BaseModel):
     track_name: str
     track_artist: list
