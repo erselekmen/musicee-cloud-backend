@@ -95,7 +95,6 @@ async def add_track(data: Track):
 
 @app.put("/tracks/update_track/{track_id}", summary="Update track")
 async def update_track(data: Track, track_id: int):
-
     await app.mongodb.tracks.find_one_and_update(
         {"track_id": track_id},
         {"$set":
@@ -111,3 +110,35 @@ async def update_track(data: Track, track_id: int):
     )
 
     return {"message": f"Track with ID {track_id} has been updated."}
+
+
+@app.delete("/tracks/delete_track/{track_id}", summary="Delete track")
+async def delete_track(track_id: int):
+    track = await app.mongodb.tracks.find_one({"track_id": track_id})
+
+    if track:
+        # If track with given track_id exists, proceed with deletion
+        await app.mongodb.tracks.delete_one({"track_id": track_id})
+        return {"message": f"Track with ID {track_id} has been deleted."}
+
+    else:
+        return {"message": f"Track with ID {track_id} does not exist."}
+
+
+@app.post("/tracks/get_track_name/{track_id}", summary="Get track name by ID", response_model=str)
+async def get_track_name(track_id: int):
+    track = await app.mongodb.tracks.find_one({"track_id": track_id}, {"track_name": 1})
+
+    if track and "track_name" in track:
+        return track["track_name"]
+    else:
+        raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
+
+
+@app.post("/tracks/get_song_details",summary="Get Details",response_model=Track)
+async def get_details(track_id: int):
+    track = await app.mongodb.tracks.find_one({"track_id": track_id})
+    if track:
+        return track
+    else:
+        return {"message": f"Track with ID {track_id} does not exist."}
