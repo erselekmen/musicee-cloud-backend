@@ -117,7 +117,7 @@ async def delete_track(track_id: int):
     track = await app.mongodb.tracks.find_one({"track_id": track_id})
 
     if track:
-        # If track with given track_id exists, proceed with deletion
+
         await app.mongodb.tracks.delete_one({"track_id": track_id})
         return {"message": f"Track with ID {track_id} has been deleted."}
 
