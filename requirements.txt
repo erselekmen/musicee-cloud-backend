@@ -9,3 +9,4 @@ status
 python-multipart
 bcrypt
 jose
+pydantic[email]

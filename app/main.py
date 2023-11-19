@@ -1,6 +1,6 @@
 from fastapi.exception_handlers import HTTPException
 from fastapi import Depends, status
-from fastapi.security import OAuth2PasswordRequestForm
+from pymongo import ReturnDocument
 from app.db import *
 from app.schema import *
 from app.utils import (
@@ -11,7 +11,7 @@ from app.utils import (
 )
 
 
-@app.post('/signup', summary="Create a new user")
+@app.post('/user/signup', summary="Create new user")
 async def create_user(data: User):
     # querying database to check if user already exist
     existing_user = await app.mongodb.users.find_one({"email": data.email})
@@ -31,9 +31,9 @@ async def create_user(data: User):
     }
 
 
-@app.post('/login', summary="Create access and refresh tokens for user")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await app.mongodb.users.find_one({"email": form_data.username})
+@app.post('/user/login', summary="Create access and refresh tokens for user")
+async def login(data: User):
+    user = await app.mongodb.users.find_one({"email": data.email})
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -41,7 +41,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         )
 
     hashed_pass = user['password']
-    if not verify_password(form_data.password, hashed_pass):
+    if not verify_password(data.password, hashed_pass):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password"
@@ -52,64 +52,62 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         "refresh_token": create_refresh_token(user['email']),
     }
 
-tracks = []
-@app.post("/tracks")
-async def add_track(track: Track):
-    global tracks
-    tracks.append(track)
-    return {"message": "Track added successfully."}
-@app.put("/tracks/{track_id}")
-async def update_track(track_id: int, updated_feature: str):
-    global tracks
-    for track in tracks:
-        if track.track_id == track_id:
-            # Update the track's feature
-            track.track_name = updated_feature
-            return {"message": f"Track with ID {track_id} has been updated."}
-    return {"error": f"Track with ID {track_id} not found."}
-@app.delete("/tracks/{track_id}")
-async def delete_track(track_id: int):
-    global tracks
-    for track in tracks:
-        if track.track_id == track_id:
-            tracks.remove(track)
-            return {"message": f"Track with ID {track_id} has been deleted."}
-    raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found.")
-@app.get("/tracks")
+
+@app.get('/tracks/get_tracks', summary="List all tracks")
 async def get_tracks():
+    cursor = app.mongodb.tracks.find({})
+
+    if cursor is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No track was found!"
+        )
+
+    tracks = []
+    async for document in cursor:
+        del document['_id']
+        tracks.append(document)
+
     return tracks
 
 
-"""@app.post("/create_user/", response_model=User)
-async def create_user(user: User):
-    existing_user = await app.mongodb.users.find_one({"username": user.username})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Item already exists")
-    await app.mongodb.users.insert_one(user.dict())
-    return user"""
+@app.post("/tracks/add_track", summary="Add a track")
+async def add_track(data: Track):
+    if data is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please check track information!"
+        )
 
-"""
-pwd = get_password_hash("ersel123")
-print(pwd)
-"""
+    track = {
+        "track_name": data.track_name,
+        "track_artist": data.track_artist,
+        "track_album": data.track_album,
+        "track_rating": data.track_rating,
+        "track_id": data.track_id,
+        "track_release_year": data.track_release_year
+    }
 
-"""class Item(BaseModel):
-    song: str
-    artist: str"""
+    await app.mongodb.tracks.insert_one(track)
 
-"""
-@app.post("/add_song/", response_model=Item)
-async def create_item(item: Item):
-    existing_item = await app.mongodb.items.find_one({"song": item.song})
-    if existing_item:
-        raise HTTPException(status_code=400, detail="Item already exists")
-    await app.mongodb.items.insert_one(item.dict())
-    return item
+    return {"message": "Track added successfully."}
 
-@app.get("/list_song/{item_name}", response_model=Item)
-async def read_item(item_name: str):
-    item = await app.mongodb.items.find_one({"song": item_name})
-    if item is None:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return item
-"""
+
+@app.put("/tracks/update_track/{track_id}", summary="Update track")
+async def update_track(data: Track, track_id: int):
+
+    await app.mongodb.tracks.find_one_and_update(
+        {"track_id": track_id},
+        {"$set":
+            {
+                "track_name": data.track_name,
+                "track_artist": data.track_artist,
+                "track_album": data.track_album,
+                "track_rating": data.track_rating,
+                "track_release_year": data.track_release_year
+            }
+        },
+        return_document=ReturnDocument.AFTER
+    )
+
+    return {"message": f"Track with ID {track_id} has been updated."}

@@ -1,15 +1,9 @@
-from pydantic import BaseModel, EmailStr, constr
+from pydantic import BaseModel, EmailStr
 
 
 class User(BaseModel):
-    email: str
+    email: EmailStr
     password: str
-
-
-class UserResponseAuth(User):
-    status_code: str
-    pass
-
 
 
 class Track(BaseModel):
@@ -19,6 +13,7 @@ class Track(BaseModel):
     track_rating: int
     track_id: int
     track_release_year: int
+
 
 class Artist(BaseModel):
     artist_name: str
@@ -33,4 +28,4 @@ class Album(BaseModel):
     album_tracks: list
     album_performers: list
     album_id: int
-    album_release_year:int
+    album_release_year: int
