@@ -11,3 +11,4 @@ workflows:
             branches:
               only:
                 - development
+                - middleware
