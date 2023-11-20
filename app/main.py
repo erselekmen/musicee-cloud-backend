@@ -1,5 +1,6 @@
 from fastapi.exception_handlers import HTTPException
 from fastapi import Depends, status
+from fastapi.middleware.cors import CORSMiddleware
 from pymongo import ReturnDocument
 from app.db import *
 from app.schema import *
@@ -8,6 +9,16 @@ from app.utils import (
     create_access_token,
     create_refresh_token,
     verify_password
+)
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
