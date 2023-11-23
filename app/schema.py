@@ -6,7 +6,7 @@ class User(BaseModel):
     email: EmailStr
     password: str
     friends: list
-    favorite_songs: dict
+    favorite_songs: list
     liked_songs: list
 
 
