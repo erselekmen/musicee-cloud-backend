@@ -2,17 +2,22 @@ from pydantic import BaseModel, EmailStr
 
 
 class User(BaseModel):
+    username: str
     email: EmailStr
     password: str
+    friends: list
+    favorite_songs: dict
+    liked_songs: list
 
 
 class Track(BaseModel):
+    track_id: int
     track_name: str
     track_artist: list
     track_album: str
-    track_rating: int
-    track_id: int
     track_release_year: int
+    track_rating: int
+    like_list: list
 
 
 class Artist(BaseModel):
