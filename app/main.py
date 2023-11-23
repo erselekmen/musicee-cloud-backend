@@ -207,3 +207,18 @@ async def like_track(username: str, track_id: int):
     )
 
     return {"message": f"Track {track_id} liked."}
+
+
+@app.post("/tracks/get_like", summary="Get number of likes per track")
+async def like_track(track_id: int):
+    data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
+
+    if not data_track:
+        raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
+
+    num = len(data_track["like_list"])
+
+    return {
+        "like_num": num,
+        "message": f"number of likes for track {track_id}"
+    }
