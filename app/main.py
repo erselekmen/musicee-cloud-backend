@@ -122,6 +122,32 @@ async def add_friend(username: str, friend_username: str):
         raise HTTPException(status_code=404, detail="User or friend not found.")
 
 
+@app.get("/users/list_friends/{username}", summary="List all friends of a user")
+async def get_friends(username: str):
+    user = await app.mongodb.users.find_one({"username": username})
+
+    if user:
+        return user.get("friends", [])
+    else:
+        raise HTTPException(status_code=404, detail=f"User with username {username} not found")
+
+
+@app.get("/users/get_user_details/{username}", summary="List all user details")
+async def get_user_details(username: str):
+    user = await app.mongodb.users.find_one({"username": username})
+
+    if user:
+        return {
+            "username": user["username"],
+            "email": user["email"],
+            "friends": user.get("friends", []),
+            "favorite_songs": user.get("favorite_songs", []),
+            "liked_songs": user.get("liked_songs", [])
+        }
+    else:
+        raise HTTPException(status_code=404, detail=f"User with username {username} not found")
+
+
 @app.get('/tracks/get_tracks', summary="List all tracks")
 async def get_tracks():
     cursor = app.mongodb.tracks.find({})
