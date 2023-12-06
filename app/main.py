@@ -14,18 +14,25 @@ from app.utils import (
 @app.post('/user/signup', summary="Create new user")
 async def create_user(data: User):
     # querying database to check if user already exist
-    existing_user = await app.mongodb.users.find_one({"email": data.email})
+    existing_email = await app.mongodb.users.find_one({"email": data.email})
+    existing_username = await app.mongodb.users.find_one({"username": data.username})
 
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Item already exists")
+    if existing_email or existing_username:
+        raise HTTPException(status_code=400, detail="Email or username already exists")
 
     user = {
+        "username": data.username,
         "email": data.email,
-        "password": get_hashed_password(data.password)
+        "password": get_hashed_password(data.password),
+        "friends": [],
+        "favorite_songs": [],
+        "liked_songs": []
     }
 
     await app.mongodb.users.insert_one(user)
+
     return {
+        "username": data.username,
         "email": data.email,
         "status": 200
     }
@@ -53,7 +60,6 @@ async def login(data: User):
     }
 
 
-
 @app.get("/users/all", summary="Get all users")
 async def get_all_users():
     users = app.mongodb.users.find({})
@@ -68,13 +74,13 @@ async def get_all_users():
         raise HTTPException(status_code=404, detail="No users found in the database")
 
 
-# Assuming you have a method to retrieve user details by username from your MongoDB collection
+
 async def get_user_by_username(username: str):
     user = await app.mongodb.users.find_one({"username": username})
     return user
 
 
-# Assuming you have a method to update user details in your MongoDB collection
+
 async def update_user_details(username: str, friends_list: list):
     await app.mongodb.users.update_one(
         {"username": username},
@@ -127,12 +133,13 @@ async def add_track(data: Track):
         )
 
     track = {
+        "track_id": data.track_id,
         "track_name": data.track_name,
         "track_artist": data.track_artist,
         "track_album": data.track_album,
+        "track_release_year": data.track_release_year,
         "track_rating": data.track_rating,
-        "track_id": data.track_id,
-        "track_release_year": data.track_release_year
+        "like_list": []
     }
 
     await app.mongodb.tracks.insert_one(track)
@@ -182,10 +189,66 @@ async def get_track_name(track_id: int):
         raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
 
 
-@app.post("/tracks/get_song_details",summary="Get Details",response_model=Track)
+@app.post("/tracks/get_track_details", summary="Get Details", response_model=Track)
 async def get_details(track_id: int):
     track = await app.mongodb.tracks.find_one({"track_id": track_id})
     if track:
         return track
     else:
         return {"message": f"Track with ID {track_id} does not exist."}
+
+
+@app.post("/tracks/like_track", summary="Like a track as a user")
+async def like_track(username: str, track_id: int):
+
+    data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
+    data_user = await app.mongodb.users.find_one({"username": username})
+
+    if not data_track:
+        raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
+
+    elif not data_user:
+        raise HTTPException(status_code=404, detail=f"User with {username} username not found")
+
+    new_liked_songs = data_user["liked_songs"]
+    new_liked_songs.append(track_id)
+
+    await app.mongodb.users.find_one_and_update(
+        {"username": username},
+        {"$set":
+            {
+                "liked_songs": new_liked_songs
+            }
+        },
+        return_document=ReturnDocument.AFTER
+    )
+
+    new_like_list = data_track["like_list"]
+    new_like_list.append(username)
+
+    await app.mongodb.tracks.find_one_and_update(
+        {"track_id": track_id},
+        {"$set":
+            {
+                "like_list": new_like_list
+            }
+        },
+        return_document=ReturnDocument.AFTER
+    )
+
+    return {"message": f"Track {track_id} liked."}
+
+
+@app.post("/tracks/get_like", summary="Get number of likes per track")
+async def like_track(track_id: int):
+    data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
+
+    if not data_track:
+        raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
+
+    num = len(data_track["like_list"])
+
+    return {
+        "like_num": num,
+        "message": f"number of likes for track {track_id}"
+    }
