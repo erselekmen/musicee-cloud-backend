@@ -14,7 +14,6 @@ class UserLogin(BaseModel):
 
 class UserDetail(User):
     friends: list
-    favorite_songs: list
     liked_songs: list
     unliked_songs: list
 
