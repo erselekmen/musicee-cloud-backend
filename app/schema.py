@@ -7,6 +7,11 @@ class User(BaseModel):
     password: str
 
 
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
 class UserDetail(User):
     friends: list
     favorite_songs: list
