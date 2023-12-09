@@ -142,10 +142,12 @@ async def get_user_details(username: str):
             "email": user["email"],
             "friends": user.get("friends", []),
             "favorite_songs": user.get("favorite_songs", []),
-            "liked_songs": user.get("liked_songs", [])
+            "liked_songs": user.get("liked_songs", []),
+            "unliked_songs": user.get("unliked_songs", [])
         }
+
     else:
-        raise HTTPException(status_code=404, detail=f"User with username {username} not found")
+        raise HTTPException(status_code=404, detail=f"User with username {username} not found")
 
 
 @app.get('/tracks/get_tracks', summary="List all tracks")
