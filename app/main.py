@@ -43,7 +43,6 @@ async def create_user(data: User):
         "email": data.email,
         "password": get_hashed_password(data.password),
         "friends": [],
-        "favorite_songs": [],
         "liked_songs": [],
         "unliked_songs": []
     }
@@ -144,7 +143,6 @@ async def get_user_details(username: str):
             "username": user["username"],
             "email": user["email"],
             "friends": user.get("friends", []),
-            "favorite_songs": user.get("favorite_songs", []),
             "liked_songs": user.get("liked_songs", []),
             "unliked_songs": user.get("unliked_songs", [])
         }
