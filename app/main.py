@@ -55,8 +55,8 @@ async def create_user(data: User):
 
 
 @app.post('/user/login', summary="Create access and refresh tokens for user")
-async def login(data: User):
-    user = await app.mongodb.users.find_one({"email": data.email})
+async def login(data: UserLogin):
+    user = await app.mongodb.users.find_one({"username": data.username})
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -281,16 +281,59 @@ async def like_track(username: str, track_id: int):
     return {"message": f"Track {track_id} liked."}
 
 
-@app.post("/tracks/get_like", summary="Get number of likes per track")
+@app.post("/tracks/unlike_track", summary="Unlike a track as a user")
+async def unlike_track(username: str, track_id: int):
+
+    data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
+    data_user = await app.mongodb.users.find_one({"username": username})
+
+    if not data_track:
+        raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
+
+    elif not data_user:
+        raise HTTPException(status_code=404, detail=f"User with {username} username not found")
+
+    new_unliked_songs = data_user["unliked_songs"]
+    new_unliked_songs.append(track_id)
+
+    await app.mongodb.users.find_one_and_update(
+        {"username": username},
+        {"$set":
+            {
+                "unliked_songs": new_unliked_songs
+            }
+        },
+        return_document=ReturnDocument.AFTER
+    )
+
+    new_unlike_list = data_track["unlike_list"]
+    new_unlike_list.append(username)
+
+    await app.mongodb.tracks.find_one_and_update(
+        {"track_id": track_id},
+        {"$set":
+            {
+                "unlike_list": new_unlike_list
+            }
+        },
+        return_document=ReturnDocument.AFTER
+    )
+
+    return {"message": f"Track {track_id} unliked."}
+
+
+@app.post("/tracks/get_like_unlike", summary="Get number of likes per track")
 async def like_track(track_id: int):
     data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
 
     if not data_track:
         raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
 
-    num = len(data_track["like_list"])
+    like_num = len(data_track["like_list"])
+    unlike_num = len(data_track["like_list"])
 
     return {
-        "like_num": num,
-        "message": f"number of likes for track {track_id}"
+        "like_num": like_num,
+        "unlike_num": unlike_num,
+        "message": f"number of likes & unlikes for track {track_id}"
     }
