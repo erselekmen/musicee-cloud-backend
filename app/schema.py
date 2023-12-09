@@ -30,6 +30,13 @@ class Track(BaseModel):
     unlike_list: list
 
 
+class AddTrack(BaseModel):
+    track_name: str
+    track_artist: list
+    track_album: str
+    track_release_year: int
+
+
 """
 class Artist(BaseModel):
     artist_name: str
