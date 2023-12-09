@@ -1,4 +1,6 @@
 from fastapi.exception_handlers import HTTPException
+import secrets
+import base64
 from fastapi import Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import ReturnDocument
@@ -42,7 +44,8 @@ async def create_user(data: User):
         "password": get_hashed_password(data.password),
         "friends": [],
         "favorite_songs": [],
-        "liked_songs": []
+        "liked_songs": [],
+        "unliked_songs": []
     }
 
     await app.mongodb.users.insert_one(user)
@@ -176,8 +179,14 @@ async def add_track(data: Track):
             detail="Please check track information!"
         )
 
+    # Generate a random byte string of length 6 (48 bits)
+    random_bytes = secrets.token_bytes(6)
+
+    # Encode the bytes in base64 and decode to get a string
+    track_id = base64.urlsafe_b64encode(random_bytes).decode('utf-8').rstrip('=')
+
     track = {
-        "track_id": data.track_id,
+        "track_id": track_id,
         "track_name": data.track_name,
         "track_artist": data.track_artist,
         "track_album": data.track_album,
