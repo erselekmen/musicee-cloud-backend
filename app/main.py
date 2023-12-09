@@ -191,10 +191,9 @@ async def add_track(data: AddTrack):
         "track_artist": data.track_artist,
         "track_album": data.track_album,
         "track_release_year": data.track_release_year,
-        "track_rating": data.track_rating,
+        "track_rating": 0,
         "like_list": [],
         "unlike_list": []
-
     }
 
     await app.mongodb.tracks.insert_one(track)
