@@ -172,7 +172,7 @@ async def get_tracks():
 
 
 @app.post("/tracks/add_track", summary="Add a track")
-async def add_track(data: Track):
+async def add_track(data: AddTrack):
     if data is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -203,7 +203,7 @@ async def add_track(data: Track):
 
 
 @app.put("/tracks/update_track/{track_id}", summary="Update track")
-async def update_track(data: Track, track_id: int):
+async def update_track(data: Track, track_id: str):
     await app.mongodb.tracks.find_one_and_update(
         {"track_id": track_id},
         {"$set":
@@ -222,7 +222,7 @@ async def update_track(data: Track, track_id: int):
 
 
 @app.delete("/tracks/delete_track/{track_id}", summary="Delete track")
-async def delete_track(track_id: int):
+async def delete_track(track_id: str):
     track = await app.mongodb.tracks.find_one({"track_id": track_id})
 
     if track:
@@ -235,7 +235,7 @@ async def delete_track(track_id: int):
 
 
 @app.post("/tracks/get_track_name/{track_id}", summary="Get track name by ID", response_model=str)
-async def get_track_name(track_id: int):
+async def get_track_name(track_id: str):
     track = await app.mongodb.tracks.find_one({"track_id": track_id}, {"track_name": 1})
 
     if track and "track_name" in track:
@@ -245,7 +245,7 @@ async def get_track_name(track_id: int):
 
 
 @app.post("/tracks/get_track_details", summary="Get Details", response_model=Track)
-async def get_details(track_id: int):
+async def get_details(track_id: str):
     track = await app.mongodb.tracks.find_one({"track_id": track_id})
     if track:
         return track
@@ -254,16 +254,14 @@ async def get_details(track_id: int):
 
 
 @app.post("/tracks/like_track", summary="Like a track as a user")
-async def like_track(username: str, track_id: int):
+async def like_track(username: str, track_id: str):
 
     data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
     data_user = await app.mongodb.users.find_one({"username": username})
 
-    if not data_track:
-        raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
 
-    elif not data_user:
-        raise HTTPException(status_code=404, detail=f"User with {username} username not found")
+    if not data_track and not data_user:
+        raise HTTPException(status_code=404, detail=f"Track ID {track_id} or User {username} not found")
 
     new_liked_songs = data_user["liked_songs"]
     new_liked_songs.append(track_id)
@@ -295,7 +293,7 @@ async def like_track(username: str, track_id: int):
 
 
 @app.post("/tracks/unlike_track", summary="Unlike a track as a user")
-async def unlike_track(username: str, track_id: int):
+async def unlike_track(username: str, track_id: str):
 
     data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
     data_user = await app.mongodb.users.find_one({"username": username})
@@ -336,7 +334,7 @@ async def unlike_track(username: str, track_id: int):
 
 
 @app.post("/tracks/get_like_unlike", summary="Get number of likes per track")
-async def like_track(track_id: int):
+async def like_track(track_id: str):
     data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
 
     if not data_track:
