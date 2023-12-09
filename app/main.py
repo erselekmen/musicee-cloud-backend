@@ -260,6 +260,40 @@ async def like_track(username: str, track_id: str):
     if not data_track and not data_user:
         raise HTTPException(status_code=404, detail=f"Track ID {track_id} or User {username} not found")
 
+    if_liked = await app.mongodb.users.find_one({"liked_songs": data_track["track_id"]})
+
+    if if_liked:
+
+        new_liked_songs = data_user["liked_songs"]
+        new_liked_songs.remove(track_id)
+
+        await app.mongodb.users.find_one_and_update(
+            {"username": username},
+            {"$set":
+                {
+                    "liked_songs": new_liked_songs
+                }
+            },
+            return_document=ReturnDocument.AFTER
+        )
+
+        new_like_list = data_track["like_list"]
+        new_like_list.remove(username)
+
+        await app.mongodb.tracks.find_one_and_update(
+            {"track_id": track_id},
+            {"$set":
+                {
+                    "like_list": new_like_list
+                }
+            },
+            return_document=ReturnDocument.AFTER
+        )
+
+        return {"message": f"Track {track_id} unliked."}
+
+
+
     new_liked_songs = data_user["liked_songs"]
     new_liked_songs.append(track_id)
 
@@ -289,7 +323,8 @@ async def like_track(username: str, track_id: str):
     return {"message": f"Track {track_id} liked."}
 
 
-@app.post("/tracks/unlike_track", summary="Unlike a track as a user")
+
+"""@app.post("/tracks/unlike_track", summary="Unlike a track as a user")
 async def unlike_track(username: str, track_id: str):
 
     data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
@@ -329,8 +364,10 @@ async def unlike_track(username: str, track_id: str):
 
     return {"message": f"Track {track_id} unliked."}
 
+"""
 
-@app.post("/tracks/get_like_unlike", summary="Get number of likes per track")
+
+@app.post("/tracks/get_like", summary="Get number of likes per track")
 async def like_track(track_id: str):
     data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
 
@@ -338,11 +375,11 @@ async def like_track(track_id: str):
         raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
 
     like_num = len(data_track["like_list"])
-    unlike_num = len(data_track["unlike_list"])
+    # unlike_num = len(data_track["unlike_list"])
 
     return {
         "like_num": like_num,
-        "unlike_num": unlike_num,
-        "message": f"number of likes & unlikes for track {track_id}"
+        # "unlike_num": unlike_num,
+        "message": f"number of like for track {track_id}"
     }
 
