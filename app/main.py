@@ -192,7 +192,9 @@ async def add_track(data: Track):
         "track_album": data.track_album,
         "track_release_year": data.track_release_year,
         "track_rating": data.track_rating,
-        "like_list": []
+        "like_list": [],
+        "unlike_list": []
+
     }
 
     await app.mongodb.tracks.insert_one(track)
@@ -341,7 +343,7 @@ async def like_track(track_id: int):
         raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
 
     like_num = len(data_track["like_list"])
-    unlike_num = len(data_track["like_list"])
+    unlike_num = len(data_track["unlike_list"])
 
     return {
         "like_num": like_num,
