@@ -189,14 +189,17 @@ async def add_track(data: AddTrack):
         "track_artist": data.track_artist,
         "track_album": data.track_album,
         "track_release_year": data.track_release_year,
-        "track_rating": 0,
+        # "track_rating": {},
         "like_list": [],
         "unlike_list": []
     }
 
     await app.mongodb.tracks.insert_one(track)
 
-    return {"message": "Track added successfully."}
+    return {
+        "message": "Track added successfully.",
+        "track_id": track_id
+    }
 
 
 @app.put("/tracks/update_track/{track_id}", summary="Update track")
@@ -267,10 +270,11 @@ async def like_track(username: str, track_id: str):
 
         await app.mongodb.users.find_one_and_update(
             {"username": username},
-            {"$set":
-                {
-                    "liked_songs": new_liked_songs
-                }
+            {
+                "$set":
+                    {
+                        "liked_songs": new_liked_songs
+                    }
             },
             return_document=ReturnDocument.AFTER
         )
@@ -280,10 +284,11 @@ async def like_track(username: str, track_id: str):
 
         await app.mongodb.tracks.find_one_and_update(
             {"track_id": track_id},
-            {"$set":
-                {
-                    "like_list": new_like_list
-                }
+            {
+                "$set":
+                    {
+                        "like_list": new_like_list
+                    }
             },
             return_document=ReturnDocument.AFTER
         )
@@ -381,3 +386,31 @@ async def like_track(track_id: str):
         "message": f"number of like for track {track_id}"
     }
 
+
+"""
+@app.post("/tracks/rate_track", summary="Rate a track from 1 to 5")
+async def rate_track(username: str, track_id: str, rating: int):
+
+    data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
+
+    if not data_track:
+        raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
+
+    rating_dict = data_track["track_rating"]
+
+    if username in rating_dict.keys():
+        raise HTTPException(status_code=404, detail=f"Track with ID {track_id} already rated")
+
+    await app.mongodb.users.find_one_and_update(
+        {"track_id": track_id},
+        {
+            "$set":
+                {
+                    f"track_rating.{username}": rating
+                }
+        },
+        return_document=ReturnDocument.AFTER
+    )
+
+    return {"message": f"Track {track_id} was rated as {rating} by {username}."}
+"""
