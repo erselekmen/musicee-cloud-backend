@@ -3,6 +3,7 @@ import secrets
 import base64
 import json
 from fastapi import status, File, UploadFile
+from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import ReturnDocument
 from app.db import *
@@ -45,6 +46,7 @@ async def create_user(data: User):
         "password": get_hashed_password(data.password),
         "friends": [],
         "liked_songs": [],
+        "liked_songs_date": [],
         "unliked_songs": []
     }
 
@@ -145,6 +147,7 @@ async def get_user_details(username: str):
             "email": user["email"],
             "friends": user.get("friends", []),
             "liked_songs": user.get("liked_songs", []),
+            "liked_songs_date": user.get("liked_songs_date",[]),
             "unliked_songs": user.get("unliked_songs", [])
         }
 
@@ -251,6 +254,8 @@ async def get_details(track_id: str):
     else:
         return {"message": f"Track with ID {track_id} does not exist."}
 
+from datetime import datetime
+
 
 @app.post("/tracks/like_track", summary="Like a track as a user")
 async def like_track(username: str, track_id: str):
@@ -263,17 +268,22 @@ async def like_track(username: str, track_id: str):
 
     if_liked = await app.mongodb.users.find_one({"liked_songs": data_track["track_id"]})
 
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     if if_liked:
 
         new_liked_songs = data_user["liked_songs"]
         new_liked_songs.remove(track_id)
+        liked_songs_date = data_user.get("liked_songs_date", [])
+        liked_songs_date.remove(track_id)  # Remove if present to update time
 
         await app.mongodb.users.find_one_and_update(
             {"username": username},
             {
                 "$set":
                     {
-                        "liked_songs": new_liked_songs
+                        "liked_songs": new_liked_songs,
+                        "liked_songs_date": liked_songs_date
                     }
             },
             return_document=ReturnDocument.AFTER
@@ -295,16 +305,17 @@ async def like_track(username: str, track_id: str):
 
         return {"message": f"Track {track_id} unliked."}
 
-
-
     new_liked_songs = data_user["liked_songs"]
     new_liked_songs.append(track_id)
+    liked_songs_date = data_user.get("liked_songs_date", [])
+    liked_songs_date.append({track_id: current_time})
 
     await app.mongodb.users.find_one_and_update(
         {"username": username},
         {"$set":
             {
-                "liked_songs": new_liked_songs
+                "liked_songs": new_liked_songs,
+                "liked_songs_date": liked_songs_date
             }
         },
         return_document=ReturnDocument.AFTER
@@ -324,6 +335,31 @@ async def like_track(username: str, track_id: str):
     )
 
     return {"message": f"Track {track_id} liked."}
+
+
+
+
+
+
+@app.get("/users/liked_songs_past_6_months/{username}", summary="Get songs liked in the past 6 months")
+async def get_liked_songs_past_6_months(username: str):
+
+    user = await app.mongodb.users.find_one({"username": username})
+
+    if not user:
+        raise HTTPException(status_code=404, detail=f"User with username {username} not found")
+
+    liked_songs_date = user.get("liked_songs_date", [])
+
+    six_months_ago = datetime.now() - timedelta(days=180)
+
+    songs_past_6_months = [
+        track_id for item in liked_songs_date
+        for track_id, liked_time in item.items()
+        if datetime.strptime(liked_time, "%Y-%m-%d %H:%M:%S") >= six_months_ago
+    ]
+
+    return {"username": username, "liked_songs_past_6_months": songs_past_6_months}
 
 
 
