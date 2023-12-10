@@ -295,8 +295,6 @@ async def like_track(username: str, track_id: str):
 
         return {"message": f"Track {track_id} unliked."}
 
-
-
     new_liked_songs = data_user["liked_songs"]
     new_liked_songs.append(track_id)
 
@@ -324,7 +322,6 @@ async def like_track(username: str, track_id: str):
     )
 
     return {"message": f"Track {track_id} liked."}
-
 
 
 """@app.post("/tracks/unlike_track", summary="Unlike a track as a user")
@@ -492,4 +489,3 @@ async def recommend_friend_track(username: str):
         my_friend_songs = list(set_my_friend_songs)
 
     return my_friend_songs
-
