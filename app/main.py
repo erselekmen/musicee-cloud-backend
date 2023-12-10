@@ -1,3 +1,5 @@
+import random
+import requests
 from fastapi.exception_handlers import HTTPException
 import secrets
 import base64
@@ -24,6 +26,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+API_URL = "http://musicee.us-west-2.elasticbeanstalk.com"
 
 
 @app.get("/api/health")
@@ -111,6 +115,10 @@ async def update_user_details(username: str, friends_list: list):
 
 @app.put("/users/add_friend/{username}/{friend_username}", summary="Add friend by username")
 async def add_friend(username: str, friend_username: str):
+
+    if username == friend_username:
+        raise HTTPException(status_code=404, detail="You cannot add yourself friend")
+
     user = await get_user_by_username(username)
     friend = await get_user_by_username(friend_username)
 
@@ -149,6 +157,7 @@ async def get_user_details(username: str):
             "liked_songs": user.get("liked_songs", []),
             "liked_songs_date": user.get("liked_songs_date",[]),
             "unliked_songs": user.get("unliked_songs", [])
+
         }
 
     else:
@@ -181,10 +190,8 @@ async def add_track(data: AddTrack):
             detail="Please check track information!"
         )
 
-    # Generate a random byte string of length 6 (48 bits)
     random_bytes = secrets.token_bytes(6)
 
-    # Encode the bytes in base64 and decode to get a string
     track_id = base64.urlsafe_b64encode(random_bytes).decode('utf-8').rstrip('=')
 
     track = {
@@ -265,39 +272,39 @@ async def like_track(username: str, track_id: str):
 
     if not data_track and not data_user:
         raise HTTPException(status_code=404, detail=f"Track ID {track_id} or User {username} not found")
-
-    if_liked = await app.mongodb.users.find_one({"liked_songs": data_track["track_id"]})
-
+    
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if track_id in data_user["liked_songs"]:
 
-    if if_liked:
 
-        new_liked_songs = data_user["liked_songs"]
-        new_liked_songs.remove(track_id)
+        data_user["liked_songs"].remove(track_id)
         liked_songs_date = data_user.get("liked_songs_date", [])
-        liked_songs_date.remove(track_id)  # Remove if present to update time
+        liked_songs_date.remove(track_id)  
+
 
         await app.mongodb.users.find_one_and_update(
             {"username": username},
             {
                 "$set":
                     {
-                        "liked_songs": new_liked_songs,
+
+                        "liked_songs": data_user["liked_songs"]
+
                         "liked_songs_date": liked_songs_date
+
                     }
             },
             return_document=ReturnDocument.AFTER
         )
 
-        new_like_list = data_track["like_list"]
-        new_like_list.remove(username)
+        data_track["like_list"].remove(username)
 
         await app.mongodb.tracks.find_one_and_update(
             {"track_id": track_id},
             {
                 "$set":
                     {
-                        "like_list": new_like_list
+                        "like_list": data_track["like_list"]
                     }
             },
             return_document=ReturnDocument.AFTER
@@ -335,9 +342,6 @@ async def like_track(username: str, track_id: str):
     )
 
     return {"message": f"Track {track_id} liked."}
-
-
-
 
 
 
@@ -487,3 +491,44 @@ async def create_upload_file(file: UploadFile = File()):
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
     return {"message": "Track file imported successfully."}
+
+
+@app.post("/tracks/recommend_friend_track")
+async def recommend_friend_track(username: str):
+
+    user_data = await app.mongodb.users.find_one({"username": username})
+
+    friend_list = user_data["friends"]
+
+    if not friend_list:
+        raise HTTPException(status_code=500, detail=f"User {username} has no friend")
+
+    my_friend_songs = []
+
+    for value in range(len(friend_list)):
+
+        friend_username = friend_list[value]
+
+        try:
+            friend_response = requests.get(f"{API_URL}/users/get_user_details/{friend_username}")
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+        friend_response = json.loads(friend_response.content.decode('utf-8'))
+
+        friend_liked_songs = friend_response["liked_songs"]
+
+        if len(friend_liked_songs) == 0:
+            continue
+
+        elif len(friend_liked_songs) == 1:
+            my_friend_songs.append(friend_liked_songs[0])
+            continue
+
+        dummy_my_friend_songs = random.choices(friend_liked_songs, None, k=5)
+
+        set_my_friend_songs = set(dummy_my_friend_songs) | set(my_friend_songs)
+        my_friend_songs = list(set_my_friend_songs)
+
+    return my_friend_songs

@@ -27,7 +27,6 @@ class Track(BaseModel):
     track_release_year: int
     # track_rating: dict
     like_list: list
-    unlike_list: list
 
 
 class AddTrack(BaseModel):
