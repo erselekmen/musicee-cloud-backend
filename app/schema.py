@@ -15,7 +15,6 @@ class UserLogin(BaseModel):
 class UserDetail(User):
     friends: list
     liked_songs: list
-    unliked_songs: list
 
 
 class Track(BaseModel):
@@ -26,7 +25,6 @@ class Track(BaseModel):
     track_release_year: int
     # track_rating: dict
     like_list: list
-    unlike_list: list
 
 
 class AddTrack(BaseModel):
