@@ -288,8 +288,7 @@ async def like_track(username: str, track_id: str):
                 "$set":
                     {
 
-                        "liked_songs": data_user["liked_songs"]
-
+                        "liked_songs": data_user["liked_songs"],
                         "liked_songs_date": liked_songs_date
 
                     }
