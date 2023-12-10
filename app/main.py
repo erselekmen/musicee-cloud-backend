@@ -200,7 +200,7 @@ async def add_track(data: AddTrack):
 
 
 @app.put("/tracks/update_track/{track_id}", summary="Update track")
-async def update_track(data: Track, track_id: str):
+async def update_track(data: AddTrack, track_id: str):
     await app.mongodb.tracks.find_one_and_update(
         {"track_id": track_id},
         {"$set":
@@ -208,7 +208,6 @@ async def update_track(data: Track, track_id: str):
                 "track_name": data.track_name,
                 "track_artist": data.track_artist,
                 "track_album": data.track_album,
-                "track_rating": data.track_rating,
                 "track_release_year": data.track_release_year
             }
         },
@@ -255,7 +254,6 @@ async def like_track(username: str, track_id: str):
 
     data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
     data_user = await app.mongodb.users.find_one({"username": username})
-
 
     if not data_track and not data_user:
         raise HTTPException(status_code=404, detail=f"Track ID {track_id} or User {username} not found")
