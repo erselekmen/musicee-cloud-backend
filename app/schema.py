@@ -24,7 +24,7 @@ class Track(BaseModel):
     track_artist: list
     track_album: str
     track_release_year: int
-    track_rating: int
+    # track_rating: dict
     like_list: list
     unlike_list: list
 
