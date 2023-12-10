@@ -1,7 +1,8 @@
 from fastapi.exception_handlers import HTTPException
 import secrets
 import base64
-from fastapi import Depends, status
+import json
+from fastapi import status, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import ReturnDocument
 from app.db import *
@@ -191,7 +192,6 @@ async def add_track(data: AddTrack):
         "track_release_year": data.track_release_year,
         # "track_rating": {},
         "like_list": [],
-        "unlike_list": []
     }
 
     await app.mongodb.tracks.insert_one(track)
@@ -414,3 +414,40 @@ async def rate_track(username: str, track_id: str, rating: int):
 
     return {"message": f"Track {track_id} was rated as {rating} by {username}."}
 """
+
+
+@app.post("/tracks/upload_track_file/")
+async def create_upload_file(file: UploadFile = File()):
+
+    try:
+        content = await file.read()
+
+        content_json = json.loads(content)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+    track_json = []
+
+    for each in content_json:
+
+        random_bytes = secrets.token_bytes(6)
+        track_id = base64.urlsafe_b64encode(random_bytes).decode('utf-8').rstrip('=')
+
+        track = {
+            "track_id": track_id,
+            "track_name": each["track_name"],
+            "track_artist": each["track_artist"],
+            "track_album": each["track_album"],
+            "track_release_year": each["track_release_year"],
+            "like_list": []
+        }
+        track_json.append(track)
+
+    try:
+        await app.mongodb.tracks.insert_many(track_json)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+    return {"message": "Track file imported successfully."}
