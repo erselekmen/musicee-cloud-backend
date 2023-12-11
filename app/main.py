@@ -37,11 +37,10 @@ def root():
 
 @app.post('/user/signup', summary="Create new user")
 async def create_user(data: User):
-    # querying database to check if user already exist
-    existing_email = await app.mongodb.users.find_one({"email": data.email})
+
     existing_username = await app.mongodb.users.find_one({"username": data.username})
 
-    if existing_email or existing_username:
+    if existing_username:
         raise HTTPException(status_code=400, detail="Email or username already exists")
 
     user = {
@@ -124,11 +123,11 @@ async def add_friend(username: str, friend_username: str):
             user_friends = user.get("friends", [])
             user_friends.append(friend_username)
 
-            user_friends = friend.get("friends", [])
-            user_friends.append(username)
+            user_friends2 = friend.get("friends", [])
+            user_friends2.append(username)
 
             await update_user_details(username, user_friends)
-            await update_user_details(username, user_friends)
+            await update_user_details(friend_username, user_friends2)
             return {"message": f"User '{username}' added '{friend_username}' as a friend."}
         else:
             raise HTTPException(status_code=400,
@@ -455,8 +454,37 @@ async def recommend_track(username: str):
     if user_data is None:
         raise HTTPException(status_code=500, detail=f"User {username} not found")
 
-    user_data[""]
+    recommend_list = []
+    same_genre = []
+    for track in user_data["liked_songs"]:
 
+        track_response = await app.mongodb.tracks.find_one({"track_id": track})
+
+        if track_response is None:
+            raise HTTPException(status_code=500, detail="No such song found")
+
+        track_genre = track_response["genre"]
+
+        cursor = app.mongodb.tracks.find({"genre": track_genre})
+        count = await app.mongodb.tracks.count_documents({"genre": track_genre})
+
+        async for document in cursor:
+            if document["track_id"] != track:
+                same_genre.append(document["track_id"])
+            else:
+                continue
+
+        if count == 0:
+            continue
+        elif 1 <= count <= 2:
+            ran_list = random.choices(same_genre, None, k=count)
+            recommend_list += ran_list
+        else:
+            ran_list = random.choices(same_genre, None, k=3)
+            recommend_list += ran_list
+
+    recommend_list_new = list(set(recommend_list))
+    return recommend_list_new
 
 @app.post("/tracks/recommend_friend_track")
 async def recommend_friend_track(username: str):
