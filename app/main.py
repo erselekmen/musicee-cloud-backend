@@ -123,6 +123,11 @@ async def add_friend(username: str, friend_username: str):
         if friend_username not in user.get("friends", []):
             user_friends = user.get("friends", [])
             user_friends.append(friend_username)
+
+            user_friends = friend.get("friends", [])
+            user_friends.append(username)
+
+            await update_user_details(username, user_friends)
             await update_user_details(username, user_friends)
             return {"message": f"User '{username}' added '{friend_username}' as a friend."}
         else:
