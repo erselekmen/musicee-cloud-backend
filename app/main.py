@@ -194,6 +194,7 @@ async def add_track(data: AddTrack):
         "track_name": data.track_name,
         "track_artist": data.track_artist,
         "track_album": data.track_album,
+        "genre": data.genre,
         "track_release_year": data.track_release_year,
         # "track_rating": {},
         "like_list": [],
@@ -216,6 +217,7 @@ async def update_track(data: AddTrack, track_id: str):
                 "track_name": data.track_name,
                 "track_artist": data.track_artist,
                 "track_album": data.track_album,
+                "genre": data.genre,
                 "track_release_year": data.track_release_year
             }
         },
@@ -425,6 +427,7 @@ async def create_upload_file(file: UploadFile = File()):
             "track_name": each["track_name"],
             "track_artist": each["track_artist"],
             "track_album": each["track_album"],
+            "genre": each["genre"],
             "track_release_year": each["track_release_year"],
             "like_list": []
         }
@@ -439,10 +442,24 @@ async def create_upload_file(file: UploadFile = File()):
     return {"message": "Track file imported successfully."}
 
 
+@app.post("/tracks/recommend_track")
+async def recommend_track(username: str):
+
+    user_data = await app.mongodb.users.find_one({"username": username})
+
+    if user_data is None:
+        raise HTTPException(status_code=500, detail=f"User {username} not found")
+
+    user_data[""]
+
+
 @app.post("/tracks/recommend_friend_track")
 async def recommend_friend_track(username: str):
 
     user_data = await app.mongodb.users.find_one({"username": username})
+
+    if user_data is None:
+        raise HTTPException(status_code=500, detail=f"User {username} not found")
 
     friend_list = user_data["friends"]
 

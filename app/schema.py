@@ -23,6 +23,7 @@ class Track(BaseModel):
     track_name: str
     track_artist: list
     track_album: str
+    genre: str
     track_release_year: int
     # track_rating: dict
     like_list: list
