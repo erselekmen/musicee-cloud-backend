@@ -51,7 +51,6 @@ async def create_user(data: User):
         "friends": [],
         "liked_songs": [],
         "liked_songs_date": [],
-        "unliked_songs": []
     }
 
     await app.mongodb.users.insert_one(user)
@@ -99,11 +98,9 @@ async def get_all_users():
         raise HTTPException(status_code=404, detail="No users found in the database")
 
 
-
 async def get_user_by_username(username: str):
     user = await app.mongodb.users.find_one({"username": username})
     return user
-
 
 
 async def update_user_details(username: str, friends_list: list):
@@ -156,8 +153,6 @@ async def get_user_details(username: str):
             "friends": user.get("friends", []),
             "liked_songs": user.get("liked_songs", []),
             "liked_songs_date": user.get("liked_songs_date",[]),
-            "unliked_songs": user.get("unliked_songs", [])
-
         }
 
     else:
@@ -232,15 +227,44 @@ async def update_track(data: AddTrack, track_id: str):
 
 @app.delete("/tracks/delete_track/{track_id}", summary="Delete track")
 async def delete_track(track_id: str):
+
     track = await app.mongodb.tracks.find_one({"track_id": track_id})
 
-    if track:
+    if track is None:
+        raise HTTPException(status_code=404, detail=f"message: Track with ID {track_id} does not exist.")
 
-        await app.mongodb.tracks.delete_one({"track_id": track_id})
-        return {"message": f"Track with ID {track_id} has been deleted."}
+    await app.mongodb.tracks.delete_one({"track_id": track_id})
 
-    else:
-        return {"message": f"Track with ID {track_id} does not exist."}
+    users = app.mongodb.users.find({})
+
+    if users is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No users were found!"
+        )
+
+    async for user in users:
+
+        if track_id not in user["liked_songs"]:
+            continue
+
+        user["liked_songs"].remove(track_id)
+        user["liked_songs_date"] = [
+            song for song in user["liked_songs_date"] if track_id not in song
+        ]
+        await app.mongodb.users.find_one_and_update(
+            {"username": user["username"]},
+            {
+                "$set":
+                    {
+                        "liked_songs": user["liked_songs"],
+                        "liked_songs_date": user["liked_songs_date"]
+                    }
+            },
+            return_document=ReturnDocument.AFTER
+        )
+
+    return {"message": f"Track with ID {track_id} has been deleted."}
 
 
 @app.post("/tracks/get_track_name/{track_id}", summary="Get track name by ID", response_model=str)
@@ -259,9 +283,7 @@ async def get_details(track_id: str):
     if track:
         return track
     else:
-        return {"message": f"Track with ID {track_id} does not exist."}
-
-from datetime import datetime
+        raise HTTPException(status_code=404, detail=f"message: Track with ID {track_id} does not exist.")
 
 
 @app.post("/tracks/like_track", summary="Like a track as a user")
@@ -272,25 +294,20 @@ async def like_track(username: str, track_id: str):
 
     if not data_track and not data_user:
         raise HTTPException(status_code=404, detail=f"Track ID {track_id} or User {username} not found")
-    
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     if track_id in data_user["liked_songs"]:
 
-
         data_user["liked_songs"].remove(track_id)
-        liked_songs_date = data_user.get("liked_songs_date", [])
-        liked_songs_date.remove(track_id)  
-
-
+        data_user["liked_songs_date"] = [
+            song for song in data_user["liked_songs_date"] if track_id not in song
+        ]
         await app.mongodb.users.find_one_and_update(
             {"username": username},
             {
                 "$set":
                     {
-
                         "liked_songs": data_user["liked_songs"],
-                        "liked_songs_date": liked_songs_date
-
+                        "liked_songs_date": data_user["liked_songs_date"]
                     }
             },
             return_document=ReturnDocument.AFTER
@@ -313,6 +330,9 @@ async def like_track(username: str, track_id: str):
 
     new_liked_songs = data_user["liked_songs"]
     new_liked_songs.append(track_id)
+
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     liked_songs_date = data_user.get("liked_songs_date", [])
     liked_songs_date.append({track_id: current_time})
 
