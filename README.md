@@ -27,7 +27,7 @@ The system focuses on user interaction and personalized music choice analysis wi
 - **Statistical Information:**
   - Provides users with statistical insights into their preferences, filterable by date constraints.
 - **Tables and Charts:**
-  - Displays tables showing how many likes the singers' songs received over time.
+  - Displays tables showing how many like the singers' songs received over time.
 
 ### Recommendations
 
@@ -46,3 +46,17 @@ The system focuses on user interaction and personalized music choice analysis wi
   - Permits sharing analysis results on social media platforms.
 - **Data Exporting:**
   - Facilitates exporting song ratings with filtering options.
+ 
+## How to Start Application on Your Local:
+
+### 1) Please download Python 3 on your local:
+
+### 2) Create a virtual environment named "venv" directory in the project root directory:
+mkdir venv
+python3 -m venv venv
+
+### 3) Configure Run/Debug Configurations on your local:
+Set interpreter as "module" to run Python module, give module name "uvicorn" and add the run script as "app.main:app --host 0.0.0.0 --port 8080 --reload"
+
+### 4) After activating the virtual environment, download the required packages on venv:
+pip install -U -r requirements.txt
