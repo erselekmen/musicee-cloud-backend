@@ -385,50 +385,6 @@ async def get_liked_songs_past_6_months(username: str):
     return {"username": username, "liked_songs_past_6_months": songs_past_6_months}
 
 
-
-"""@app.post("/tracks/unlike_track", summary="Unlike a track as a user")
-async def unlike_track(username: str, track_id: str):
-
-    data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
-    data_user = await app.mongodb.users.find_one({"username": username})
-
-    if not data_track:
-        raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
-
-    elif not data_user:
-        raise HTTPException(status_code=404, detail=f"User with {username} username not found")
-
-    new_unliked_songs = data_user["unliked_songs"]
-    new_unliked_songs.append(track_id)
-
-    await app.mongodb.users.find_one_and_update(
-        {"username": username},
-        {"$set":
-            {
-                "unliked_songs": new_unliked_songs
-            }
-        },
-        return_document=ReturnDocument.AFTER
-    )
-
-    new_unlike_list = data_track["unlike_list"]
-    new_unlike_list.append(username)
-
-    await app.mongodb.tracks.find_one_and_update(
-        {"track_id": track_id},
-        {"$set":
-            {
-                "unlike_list": new_unlike_list
-            }
-        },
-        return_document=ReturnDocument.AFTER
-    )
-
-    return {"message": f"Track {track_id} unliked."}
-
-"""
-
-
 @app.post("/tracks/get_like", summary="Get number of likes per track")
 async def like_track(track_id: str):
     data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
@@ -444,35 +400,6 @@ async def like_track(track_id: str):
         # "unlike_num": unlike_num,
         "message": f"number of like for track {track_id}"
     }
-
-
-"""
-@app.post("/tracks/rate_track", summary="Rate a track from 1 to 5")
-async def rate_track(username: str, track_id: str, rating: int):
-
-    data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
-
-    if not data_track:
-        raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
-
-    rating_dict = data_track["track_rating"]
-
-    if username in rating_dict.keys():
-        raise HTTPException(status_code=404, detail=f"Track with ID {track_id} already rated")
-
-    await app.mongodb.users.find_one_and_update(
-        {"track_id": track_id},
-        {
-            "$set":
-                {
-                    f"track_rating.{username}": rating
-                }
-        },
-        return_document=ReturnDocument.AFTER
-    )
-
-    return {"message": f"Track {track_id} was rated as {rating} by {username}."}
-"""
 
 
 @app.post("/tracks/upload_track_file/")
