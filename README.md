@@ -53,6 +53,7 @@ The system focuses on user interaction and personalized music choice analysis wi
 
 ### 2) Create a virtual environment named "venv" directory in the project root directory:
 mkdir venv
+
 python3 -m venv venv
 
 ### 3) Configure Run/Debug Configurations on your local:
