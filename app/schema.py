@@ -16,7 +16,6 @@ class UserDetail(User):
     friends: list
     liked_songs: list
     liked_songs_date: list
-    unliked_songs: list
 
 
 class Track(BaseModel):
