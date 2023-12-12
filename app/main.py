@@ -4,6 +4,7 @@ from fastapi.exception_handlers import HTTPException
 import secrets
 import base64
 import json
+import logging
 from fastapi import status, File, UploadFile
 from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
@@ -528,3 +529,34 @@ async def recommend_friend_track(username: str):
         my_friend_songs = list(set_my_friend_songs)
 
     return my_friend_songs
+
+
+@app.post("/tracks/recommend_artist_track", operation_id="recommend_artist_track")
+async def recommend_artist_track(username: str):
+    # Step 1: Retrieve user data
+    user_data = await app.mongodb.users.find_one({"username": username})
+
+    if user_data is None:
+        raise HTTPException(status_code=404, detail=f"User {username} not found")
+
+    recommend_list = []
+
+    for liked_song_id in user_data.get("liked_songs", []):
+
+        track_response = await app.mongodb.tracks.find_one({"track_id": liked_song_id})
+
+        if track_response is None:
+            logging.warning(f"No information found for song {liked_song_id}")
+            continue
+
+        track_artist = track_response.get("track_artist")
+
+        cursor = app.mongodb.tracks.find({"track_artist": track_artist, "track_id": {"$ne": liked_song_id}})
+        same_artist_tracks = await cursor.to_list(length=None)
+
+        if len(same_artist_tracks) > 0:
+            count = min(len(same_artist_tracks), 3)
+            ran_list = random.sample(same_artist_tracks, count)
+            recommend_list.extend(track["track_name"] for track in ran_list)
+
+    return recommend_list
