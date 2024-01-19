@@ -51,6 +51,7 @@ async def create_user(data: User):
         "friends": [],
         "liked_songs": [],
         "liked_songs_date": [],
+        "comment": []
     }
 
     await app.mongodb.users.insert_one(user)
@@ -158,6 +159,8 @@ async def get_user_details(username: str):
             "friends": user.get("friends", []),
             "liked_songs": user.get("liked_songs", []),
             "liked_songs_date": user.get("liked_songs_date",[]),
+            "comment": user.get("comment", []),
+
         }
 
     else:
@@ -203,6 +206,7 @@ async def add_track(data: AddTrack):
         "track_release_year": data.track_release_year,
         # "track_rating": {},
         "like_list": [],
+        "comment": []
     }
 
     await app.mongodb.tracks.insert_one(track)
@@ -560,3 +564,61 @@ async def recommend_artist_track(username: str):
             recommend_list.extend(track["track_name"] for track in ran_list)
 
     return recommend_list
+
+
+@app.post("/tracks/post_comment")
+async def post_comment(user_name: str, track_id: str, comment_text: str):
+    user_data = await app.mongodb.users.find_one({"username": user_name})
+
+    random_bytes = secrets.token_bytes(6)
+    comment_id = base64.urlsafe_b64encode(random_bytes).decode('utf-8').rstrip('=')
+
+    comment_dict = {
+        "comment_id": comment_id,
+        "comment": comment_text,
+        "username": user_name,
+        "track_id": track_id
+    }
+
+    if "comment" not in user_data:
+        user_data["comment"] = []
+
+    user_data["comment"].append(comment_dict)
+
+    await app.mongodb.users.find_one_and_update(
+        {"username": user_name},
+        {"$set": {"comment": user_data["comment"]}},
+        return_document=ReturnDocument.AFTER
+    )
+
+    await app.mongodb.tracks.find_one_and_update(
+        {"track_id": track_id},
+        {"$set": {"comment": user_data["comment"]}},
+        return_document=ReturnDocument.AFTER
+    )
+
+
+@app.post("/tracks/add_playlist")
+async def post_comment(user_name: str, track_id: str):
+    user_data = await app.mongodb.users.find_one({"username": user_name})
+
+    playlist = user_data["playlist"]
+
+    if track_id in playlist:
+
+        playlist["liked_songs"].remove(track_id)
+        data_user["liked_songs_date"] = [
+            song for song in data_user["liked_songs_date"] if track_id not in song
+        ]
+        await app.mongodb.users.find_one_and_update(
+            {"username": username},
+            {
+                "$set":
+                    {
+                        "liked_songs": data_user["liked_songs"],
+                        "liked_songs_date": data_user["liked_songs_date"]
+                    }
+            },
+            return_document=ReturnDocument.AFTER
+        )
+
