@@ -16,6 +16,7 @@ class UserDetail(User):
     friends: list
     liked_songs: list
     liked_songs_date: list
+    comments: list
 
 
 class Track(BaseModel):
@@ -26,6 +27,7 @@ class Track(BaseModel):
     genre: str
     track_release_year: int
     like_list: list
+    comment: list
 
 
 class AddTrack(BaseModel):
