@@ -291,6 +291,7 @@ async def get_track_name(track_id: str):
 @app.post("/tracks/get_track_details", summary="Get Details", response_model=Track)
 async def get_details(track_id: str):
     track = await app.mongodb.tracks.find_one({"track_id": track_id})
+
     if track:
         return track
     else:
@@ -622,3 +623,38 @@ async def post_comment(user_name: str, track_id: str):
             return_document=ReturnDocument.AFTER
         )
 
+
+@app.get("/album/tracks", summary="Get all tracks of the album")
+async def get_album_tracks(track_album: str):
+    try:
+        logging.info(f"Searching for album: {track_album}")
+
+        album_tracks_cursor = app.mongodb.tracks.find(
+            {"track_album": track_album},
+            {"_id": 0}  # Exclude the _id field from the result
+        )
+        album_tracks = [document for document in await album_tracks_cursor.to_list(length=None)]
+
+        return album_tracks
+
+    except Exception as e:
+        logging.error(f"MongoDB Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: Database error")
+
+
+@app.get("/artist/tracks", summary="Get all tracks by the artist")
+async def get_artist_tracks(track_artist: str):
+    try:
+        logging.info(f"Searching for artist: {track_artist}")
+
+        artist_tracks_cursor = app.mongodb.tracks.find(
+            {"track_artist": track_artist},
+            {"_id": 0}  # Exclude the _id field from the result
+        )
+        artist_tracks = [document for document in await artist_tracks_cursor.to_list(length=None)]
+
+        return artist_tracks
+
+    except Exception as e:
+        logging.error(f"MongoDB Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: Database error")
