@@ -38,7 +38,6 @@ def root():
 
 @app.post('/user/signup', summary="Create new user")
 async def create_user(data: User):
-
     existing_username = await app.mongodb.users.find_one({"username": data.username})
 
     if existing_username:
@@ -51,6 +50,7 @@ async def create_user(data: User):
         "friends": [],
         "liked_songs": [],
         "liked_songs_date": [],
+        "playlist": [],
         "comment": []
     }
 
@@ -113,7 +113,6 @@ async def update_user_details(username: str, friends_list: list):
 
 @app.put("/users/add_friend/{username}/{friend_username}", summary="Add friend by username")
 async def add_friend(username: str, friend_username: str):
-
     if username == friend_username:
         raise HTTPException(status_code=404, detail="You cannot add yourself friend")
 
@@ -158,7 +157,7 @@ async def get_user_details(username: str):
             "email": user["email"],
             "friends": user.get("friends", []),
             "liked_songs": user.get("liked_songs", []),
-            "liked_songs_date": user.get("liked_songs_date",[]),
+            "liked_songs_date": user.get("liked_songs_date", []),
             "comment": user.get("comment", []),
 
         }
@@ -238,7 +237,6 @@ async def update_track(data: AddTrack, track_id: str):
 
 @app.delete("/tracks/delete_track/{track_id}", summary="Delete track")
 async def delete_track(track_id: str):
-
     track = await app.mongodb.tracks.find_one({"track_id": track_id})
 
     if track is None:
@@ -288,7 +286,7 @@ async def get_track_name(track_id: str):
         raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
 
 
-@app.post("/tracks/get_track_details", summary="Get Details", response_model=Track)
+@app.post("/tracks/get_track_details/{track_id}", summary="Get Details", response_model=Track)
 async def get_details(track_id: str):
     track = await app.mongodb.tracks.find_one({"track_id": track_id})
 
@@ -300,7 +298,6 @@ async def get_details(track_id: str):
 
 @app.post("/tracks/like_track", summary="Like a track as a user")
 async def like_track(username: str, track_id: str):
-
     data_track = await app.mongodb.tracks.find_one({"track_id": track_id})
     data_user = await app.mongodb.users.find_one({"username": username})
 
@@ -308,7 +305,6 @@ async def like_track(username: str, track_id: str):
         raise HTTPException(status_code=404, detail=f"Track ID {track_id} or User {username} not found")
 
     if track_id in data_user["liked_songs"]:
-
         data_user["liked_songs"].remove(track_id)
         data_user["liked_songs_date"] = [
             song for song in data_user["liked_songs_date"] if track_id not in song
@@ -375,10 +371,8 @@ async def like_track(username: str, track_id: str):
     return {"message": f"Track {track_id} liked."}
 
 
-
 @app.get("/users/liked_songs_past_6_months/{username}", summary="Get songs liked in the past 6 months")
 async def get_liked_songs_past_6_months(username: str):
-
     user = await app.mongodb.users.find_one({"username": username})
 
     if not user:
@@ -416,7 +410,6 @@ async def like_track(track_id: str):
 
 @app.post("/tracks/upload_track_file/")
 async def create_upload_file(file: UploadFile = File()):
-
     try:
         content = await file.read()
 
@@ -428,7 +421,6 @@ async def create_upload_file(file: UploadFile = File()):
     track_json = []
 
     for each in content_json:
-
         random_bytes = secrets.token_bytes(6)
         track_id = base64.urlsafe_b64encode(random_bytes).decode('utf-8').rstrip('=')
 
@@ -454,7 +446,6 @@ async def create_upload_file(file: UploadFile = File()):
 
 @app.post("/tracks/recommend_track")
 async def recommend_track(username: str):
-
     user_data = await app.mongodb.users.find_one({"username": username})
 
     if user_data is None:
@@ -492,9 +483,9 @@ async def recommend_track(username: str):
     recommend_list_new = list(set(recommend_list))
     return recommend_list_new
 
+
 @app.post("/tracks/recommend_friend_track")
 async def recommend_friend_track(username: str):
-
     user_data = await app.mongodb.users.find_one({"username": username})
 
     if user_data is None:
@@ -599,12 +590,32 @@ async def post_comment(user_name: str, track_id: str, comment_text: str):
     )
 
 
-@app.post("/tracks/add_playlist")
-async def post_comment(user_name: str, track_id: str):
+"""@app.post("/tracks/add_playlist")
+async def add_playlist(user_name: str, track_id: str):
     user_data = await app.mongodb.users.find_one({"username": user_name})
 
     playlist = user_data["playlist"]
 
+    # playlist.append(track_id)
+
+    try:
+        track_response = requests.get(f"{API_URL}/tracks/get_track_details/{track_id}")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+    track_detail = json.loads(track_response.content.decode('utf-8'))
+
+    await app.mongodb.tracks.find_one_and_update(
+        {"username": user_name},
+        {"$set": {"playlist": user_data["playlist"]}},
+        return_document=ReturnDocument.AFTER
+    )
+
+    # friend_liked_songs = track_detail["liked_songs"]
+"""
+
+"""
     if track_id in playlist:
 
         playlist["liked_songs"].remove(track_id)
@@ -622,6 +633,7 @@ async def post_comment(user_name: str, track_id: str):
             },
             return_document=ReturnDocument.AFTER
         )
+"""
 
 
 @app.get("/album/tracks", summary="Get all tracks of the album")
