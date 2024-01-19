@@ -286,7 +286,7 @@ async def get_track_name(track_id: str):
         raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
 
 
-@app.post("/tracks/get_track_details/{track_id}", summary="Get Details", response_model=Track)
+@app.get("/tracks/get_track_details/{track_id}", summary="Get Details", response_model=Track)
 async def get_details(track_id: str):
     track = await app.mongodb.tracks.find_one({"track_id": track_id})
 
@@ -599,7 +599,7 @@ async def add_playlist(user_name: str, track_id: str):
     # playlist.append(track_id)
 
     try:
-        track_response = requests.get(f"{API_URL}/tracks/get_track_details/{track_id}")
+        track_response = requests.post(f"{API_URL}/tracks/get_track_details/{track_id}")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
@@ -613,8 +613,8 @@ async def add_playlist(user_name: str, track_id: str):
     )
 
     # friend_liked_songs = track_detail["liked_songs"]
-"""
 
+"""
 """
     if track_id in playlist:
 
