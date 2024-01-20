@@ -590,7 +590,7 @@ async def post_comment(user_name: str, track_id: str, comment_text: str):
     )
 
 
-"""@app.post("/tracks/add_playlist")
+@app.post("/tracks/add_playlist")
 async def add_playlist(user_name: str, track_id: str):
     user_data = await app.mongodb.users.find_one({"username": user_name})
 
@@ -598,13 +598,19 @@ async def add_playlist(user_name: str, track_id: str):
 
     # playlist.append(track_id)
 
+    if playlist["track_id"] == track_id:
+
+        playlist["track_id"] = [track_id for track_id in user_data["comment"] if playlist["comment_id"] != track_id]
+        return "Track removed from playlist"
+
     try:
-        track_response = requests.post(f"{API_URL}/tracks/get_track_details/{track_id}")
+        track_response = requests.get(f"{API_URL}/tracks/get_track_details/{track_id}")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
     track_detail = json.loads(track_response.content.decode('utf-8'))
+
 
     await app.mongodb.tracks.find_one_and_update(
         {"username": user_name},
@@ -614,7 +620,6 @@ async def add_playlist(user_name: str, track_id: str):
 
     # friend_liked_songs = track_detail["liked_songs"]
 
-"""
 """
     if track_id in playlist:
 
