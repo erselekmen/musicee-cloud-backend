@@ -287,14 +287,16 @@ async def get_track_name(track_id: str):
         raise HTTPException(status_code=404, detail=f"Track with ID {track_id} not found")
 
 
-@app.get("/tracks/get_track_details/{track_id}", summary="Get Details", response_model=Track)
+@app.get("/tracks/get_track_details/{track_id}", summary="Get Details", )
 async def get_details(track_id: str):
     track = await app.mongodb.tracks.find_one({"track_id": track_id})
 
     if track:
+        track["_id"] = str(track["_id"])
         return track
+
     else:
-        raise HTTPException(status_code=404, detail=f"message: Track with ID {track_id} does not exist.")
+        raise HTTPException(status_code=404, detail=f"Track with ID {track_id} does not exist.")
 
 
 @app.post("/tracks/like_track", summary="Like a track as a user")
@@ -659,3 +661,32 @@ async def get_artist_tracks(track_artist: str):
     except Exception as e:
         logging.error(f"MongoDB Error: {e}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: Database error")
+
+
+@app.get("/popular_genre", summary= "Get top 3 tracks of each genre")
+async def get_popular_genre_tracks():
+    cursor = app.mongodb.tracks.find({})
+
+    if cursor is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No track was found!"
+        )
+
+    tracks_by_genre = {}
+
+    async for document in cursor:
+        del document['_id']
+        genre = document.get('genre')
+
+        if genre:
+
+            if genre not in tracks_by_genre:
+                tracks_by_genre[genre] = []
+
+            tracks_by_genre[genre].append(document)
+
+    for genre, tracks in tracks_by_genre.items():
+        tracks_by_genre[genre] = sorted(tracks, key=lambda x: len(x.get('like_list', [])), reverse=True)[:3]
+
+    return {"top_3_tracks_by_genre": tracks_by_genre}
