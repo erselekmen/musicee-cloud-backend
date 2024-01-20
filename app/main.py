@@ -158,6 +158,7 @@ async def get_user_details(username: str):
             "friends": user.get("friends", []),
             "liked_songs": user.get("liked_songs", []),
             "liked_songs_date": user.get("liked_songs_date", []),
+            "playlist": user.get("playlist", []),
             "comment": user.get("comment", []),
 
         }
@@ -593,52 +594,35 @@ async def post_comment(user_name: str, track_id: str, comment_text: str):
 @app.post("/tracks/add_playlist")
 async def add_playlist(user_name: str, track_id: str):
     user_data = await app.mongodb.users.find_one({"username": user_name})
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
 
-    playlist = user_data["playlist"]
+    # Initialize playlist if not present
+    playlist = user_data.get("playlist", [])
 
-    # playlist.append(track_id)
-
-    if playlist["track_id"] == track_id:
-
-        playlist["track_id"] = [track_id for track_id in user_data["comment"] if playlist["comment_id"] != track_id]
-        return "Track removed from playlist"
-
-    try:
-        track_response = requests.get(f"{API_URL}/tracks/get_track_details/{track_id}")
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
-
-    track_detail = json.loads(track_response.content.decode('utf-8'))
-
-
-    await app.mongodb.tracks.find_one_and_update(
-        {"username": user_name},
-        {"$set": {"playlist": user_data["playlist"]}},
-        return_document=ReturnDocument.AFTER
-    )
-
-    # friend_liked_songs = track_detail["liked_songs"]
-
-"""
+    # Check if track ID is already in the playlist (as a string)
     if track_id in playlist:
+        playlist.remove(f"{track_id}")
 
-        playlist["liked_songs"].remove(track_id)
-        data_user["liked_songs_date"] = [
-            song for song in data_user["liked_songs_date"] if track_id not in song
-        ]
         await app.mongodb.users.find_one_and_update(
-            {"username": username},
-            {
-                "$set":
-                    {
-                        "liked_songs": data_user["liked_songs"],
-                        "liked_songs_date": data_user["liked_songs_date"]
-                    }
-            },
+            {"username": user_name},
+            {"$set": {"playlist": playlist}},
             return_document=ReturnDocument.AFTER
         )
-"""
+
+        return "Track already in playlist"
+
+    else:
+        playlist.append(track_id)
+
+        # Update the playlist in the database
+        await app.mongodb.users.find_one_and_update(
+            {"username": user_name},
+            {"$set": {"playlist": playlist}},
+            return_document=ReturnDocument.AFTER
+        )
+
+        return "Track added to playlist"
 
 
 @app.get("/album/tracks", summary="Get all tracks of the album")
