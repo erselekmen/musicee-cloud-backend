@@ -692,3 +692,85 @@ async def get_popular_genre_tracks():
         tracks_by_genre[genre] = sorted(tracks, key=lambda x: len(x.get('like_list', [])), reverse=True)[:3]
 
     return {"top_3_tracks_by_genre": tracks_by_genre}
+
+
+@app.post("/user/get_like_artist", summary="return number of likes per artist")
+async def get_like_artist(user_name: str):
+    tracks_cursor = app.mongodb.tracks.find({})
+    tracks = []
+
+    async for document in tracks_cursor:
+        del document['_id']
+        tracks.append(document)
+
+    user = await app.mongodb.users.find_one({"username": user_name})
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect Username"
+        )
+
+    like_list = user["liked_songs"]
+    like_artist = {}
+
+    for liked in like_list:
+        track = await app.mongodb.tracks.find_one({"track_id": liked})
+        for artist in track["track_artist"]:
+            if artist not in like_artist:
+                like_artist[artist] = 1
+            else:
+                like_artist[artist] += 1
+
+    return like_artist
+
+
+@app.post("/user/get_like_genre", summary="return number of likes per genre")
+async def get_like_genre(user_name: str):
+    tracks_cursor = app.mongodb.tracks.find({})
+    tracks = []
+
+    async for document in tracks_cursor:
+        del document['_id']
+        tracks.append(document)
+
+    user = await app.mongodb.users.find_one({"username": user_name})
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect Username"
+        )
+
+    like_list = user["liked_songs"]
+    like_genre = {}
+
+    for liked in like_list:
+        track = await app.mongodb.tracks.find_one({"track_id": liked})
+        genre = track["genre"]
+        if genre not in like_genre:
+            like_genre[genre] = 1
+        else:
+            like_genre[genre] += 1
+
+    return like_genre
+
+
+@app.post("/user/get_like_friends", summary="return number of likes per friend")
+async def get_like_friends(user_name: str):
+    user = await app.mongodb.users.find_one({"username": user_name})
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect Username"
+        )
+    friends = user["friends"]
+    likes_friend = {}
+
+    for friend in friends:
+        friend_obj = await app.mongodb.users.find_one({"username": friend})
+        if friend_obj:
+            likes_friend[friend] = len(friend_obj["liked_songs"])
+
+    return likes_friend
+
+
+
