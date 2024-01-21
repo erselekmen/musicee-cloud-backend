@@ -434,7 +434,9 @@ async def create_upload_file(file: UploadFile = File()):
             "track_album": each["track_album"],
             "genre": each["genre"],
             "track_release_year": each["track_release_year"],
-            "like_list": []
+            "like_list": [],
+            "comment": []
+
         }
         track_json.append(track)
 
