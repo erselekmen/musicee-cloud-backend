@@ -607,10 +607,11 @@ async def post_comment(user_name: str, track_id: str, comment_text: str):
         {"$set": {"comment": user_data["comment"]}},
         return_document=ReturnDocument.AFTER
     )
-
+    track_ = await app.mongodb.tracks.find_one({"track_id": track_id})
+    track_["comment"].append(comment_dict)
     await app.mongodb.tracks.find_one_and_update(
         {"track_id": track_id},
-        {"$set": {"comment": user_data["comment"]}},
+        {"$set": {"comment": track_["comment"]}},
         return_document=ReturnDocument.AFTER
     )
 
