@@ -255,24 +255,44 @@ async def delete_track(track_id: str):
 
     async for user in users:
 
-        if track_id not in user["liked_songs"]:
+        if track_id not in user["liked_songs"] and track_id not in user["comment"]:
             continue
 
-        user["liked_songs"].remove(track_id)
-        user["liked_songs_date"] = [
-            song for song in user["liked_songs_date"] if track_id not in song
-        ]
-        await app.mongodb.users.find_one_and_update(
-            {"username": user["username"]},
-            {
-                "$set":
-                    {
-                        "liked_songs": user["liked_songs"],
-                        "liked_songs_date": user["liked_songs_date"]
-                    }
-            },
-            return_document=ReturnDocument.AFTER
-        )
+        if track_id in user["liked_songs"]:
+            user["liked_songs"].remove(track_id)
+            user["liked_songs_date"] = [
+                song for song in user["liked_songs_date"] if track_id not in song
+            ]
+            await app.mongodb.users.find_one_and_update(
+                {"username": user["username"]},
+                {
+                    "$set":
+                        {
+                            "liked_songs": user["liked_songs"],
+                            "liked_songs_date": user["liked_songs_date"]
+                        }
+                },
+                return_document=ReturnDocument.AFTER
+            )
+
+        if any(comment['track_id'] == track_id for comment in user['comment']):
+
+            # Filter out the comments with the specific track_id
+            filtered_comments = [comment for comment in user['comment'] if comment['track_id'] != track_id]
+
+            # Update the data dictionary
+            user['comment'] = filtered_comments
+
+            await app.mongodb.users.find_one_and_update(
+                {"username": user["username"]},
+                {
+                    "$set":
+                        {
+                            "comment": user["comment"]
+                        }
+                },
+                return_document=ReturnDocument.AFTER
+            )
 
     return {"message": f"Track with ID {track_id} has been deleted."}
 
