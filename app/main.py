@@ -793,4 +793,27 @@ async def get_like_friends(user_name: str):
     return likes_friend
 
 
+def find_common_elements(list1, list2):
+    count_list1 = {item: list1.count(item) for item in set(list1)}
+    count_list2 = {item: list2.count(item) for item in set(list2)}
+    common_elements = set(count_list1.keys()) & set(count_list2.keys())
+    return common_elements
+
+
+@app.post("/user/get_common_likes_friends", summary="return number of common likes per friend")
+async def get_common_likes_friends(user_name: str):
+    user = await app.mongodb.users.find_one({"username": user_name})
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect Username"
+        )
+    friends = user["friends"]
+    likes_friend = {}
+    for friend in friends:
+        friend_obj = await app.mongodb.users.find_one({"username": friend})
+        if friend_obj:
+            likes_friend[friend] = find_common_elements(friend_obj["liked_songs"], user["liked_songs"])
+
+    return likes_friend
 
