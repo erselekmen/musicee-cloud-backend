@@ -255,9 +255,6 @@ async def delete_track(track_id: str):
 
     async for user in users:
 
-        if track_id not in user["liked_songs"] and track_id not in user["comment"]:
-            continue
-
         if track_id in user["liked_songs"]:
             user["liked_songs"].remove(track_id)
             user["liked_songs_date"] = [
@@ -275,24 +272,10 @@ async def delete_track(track_id: str):
                 return_document=ReturnDocument.AFTER
             )
 
-        if any(comment['track_id'] == track_id for comment in user['comment']):
-
-            # Filter out the comments with the specific track_id
-            filtered_comments = [comment for comment in user['comment'] if comment['track_id'] != track_id]
-
-            # Update the data dictionary
-            user['comment'] = filtered_comments
-
-            await app.mongodb.users.find_one_and_update(
-                {"username": user["username"]},
-                {
-                    "$set":
-                        {
-                            "comment": user["comment"]
-                        }
-                },
-                return_document=ReturnDocument.AFTER
-            )
+        await app.mongodb.users.update_many(
+            {},
+            {"$pull": {"comment": {"track_id": track_id}}}
+        )
 
     return {"message": f"Track with ID {track_id} has been deleted."}
 
@@ -616,13 +599,30 @@ async def post_comment(user_name: str, track_id: str, comment_text: str):
 
 
 @app.post("/tracks/add_playlist")
-async def add_playlist(user_name: str, track_id: str):
+async def add_playlist(user_name: str, playlist_name: str, track_id: str):
+
     user_data = await app.mongodb.users.find_one({"username": user_name})
     if not user_data:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Initialize playlist if not present
     playlist = user_data.get("playlist", [])
+
+    if any(playlist['playlist_name'] == playlist_name for playlist in user_data['playlist']):
+
+        user_data['playlist'].append(
+            {
+                "playlist_name": playlist_name,
+                "creator": user_name,
+                "playlist_tracks": track_id if track_id else []
+            }
+        )
+
+    else:
+        for playlist in user_data['playlists']:
+            if playlist['playlist_name'] == playlist_name:
+                # Add the track ID to the playlist's tracks
+                playlist['playlist_tracks'].append(track_id)
+                break
 
     # Check if track ID is already in the playlist (as a string)
     if track_id in playlist:
