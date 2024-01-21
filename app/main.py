@@ -640,16 +640,29 @@ async def add_or_remove_track_from_playlist(user_name: str, playlist_name: str, 
     return action
 
 
-"""    else:
-        playlist.append(track_id)
+@app.delete("/tracks/delete_playlist")
+async def delete_playlist(user_name: str, playlist_name: str):
+    # Fetch the user data
+    user_data = await app.mongodb.users.find_one({"username": user_name})
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
 
-        # Update the playlist in the database
-        await app.mongodb.users.find_one_and_update(
-            {"username": user_name},
-            {"$set": {"playlist": playlist}},
-            return_document=ReturnDocument.AFTER
-        )
-"""
+    # Get the current playlists and filter out the specified one
+    playlists = user_data.get("playlist", [])
+    updated_playlists = [p for p in playlists if p['playlist_name'] != playlist_name]
+
+    # Check if the playlist was actually found and removed
+    if len(updated_playlists) == len(playlists):
+        raise HTTPException(status_code=404, detail="Playlist not found")
+
+    # Update the user document with the modified playlists
+    await app.mongodb.users.find_one_and_update(
+        {"username": user_name},
+        {"$set": {"playlist": updated_playlists}},
+        return_document=ReturnDocument.AFTER
+    )
+
+    return {"message": f"Playlist '{playlist_name}' has been deleted from user '{user_name}'."}
 
 
 @app.get("/album/tracks", summary="Get all tracks of the album")
