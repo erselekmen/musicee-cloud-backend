@@ -600,44 +600,47 @@ async def post_comment(user_name: str, track_id: str, comment_text: str):
 
 
 @app.post("/tracks/add_playlist")
-async def add_playlist(user_name: str, playlist_name: str, track_id: str):
-
+async def add_or_remove_track_from_playlist(user_name: str, playlist_name: str, track_id: str):
     user_data = await app.mongodb.users.find_one({"username": user_name})
     if not user_data:
         raise HTTPException(status_code=404, detail="User not found")
 
-    playlist = user_data.get("playlist", [])
+    playlists = user_data.get("playlist", [])
 
-    if any(playlist['playlist_name'] == playlist_name for playlist in user_data['playlist']):
+    # Find if the playlist already exists
+    existing_playlist = next((p for p in playlists if p['playlist_name'] == playlist_name), None)
 
-        user_data['playlist'].append(
-            {
-                "playlist_name": playlist_name,
-                "creator": user_name,
-                "playlist_tracks": track_id if track_id else []
-            }
-        )
-
+    if existing_playlist:
+        # Check if track ID is already in the playlist
+        if track_id in existing_playlist["playlist_tracks"]:
+            # Remove the track ID from the playlist's tracks
+            existing_playlist['playlist_tracks'].remove(track_id)
+            action = "Track removed from playlist"
+        else:
+            # Add the track ID to the playlist's tracks
+            existing_playlist['playlist_tracks'].append(track_id)
+            action = "Track added to playlist"
     else:
-        for playlist in user_data['playlists']:
-            if playlist['playlist_name'] == playlist_name:
-                # Add the track ID to the playlist's tracks
-                playlist['playlist_tracks'].append(track_id)
-                break
+        # Create a new playlist and add the track
+        new_playlist = {
+            "playlist_name": playlist_name,
+            "creator": user_name,
+            "playlist_tracks": [track_id]
+        }
+        playlists.append(new_playlist)
+        action = "New playlist created and track added"
 
-    # Check if track ID is already in the playlist (as a string)
-    if track_id in playlist:
-        playlist.remove(f"{track_id}")
+    # Update the user document with the modified playlists
+    await app.mongodb.users.find_one_and_update(
+        {"username": user_name},
+        {"$set": {"playlist": playlists}},
+        return_document=ReturnDocument.AFTER
+    )
 
-        await app.mongodb.users.find_one_and_update(
-            {"username": user_name},
-            {"$set": {"playlist": playlist}},
-            return_document=ReturnDocument.AFTER
-        )
+    return action
 
-        return "Track already in playlist"
 
-    else:
+"""    else:
         playlist.append(track_id)
 
         # Update the playlist in the database
@@ -646,8 +649,7 @@ async def add_playlist(user_name: str, playlist_name: str, track_id: str):
             {"$set": {"playlist": playlist}},
             return_document=ReturnDocument.AFTER
         )
-
-        return "Track added to playlist"
+"""
 
 
 @app.get("/album/tracks", summary="Get all tracks of the album")
@@ -686,7 +688,7 @@ async def get_artist_tracks(track_artist: str):
         raise HTTPException(status_code=500, detail=f"Internal Server Error: Database error")
 
 
-@app.get("/popular_genre", summary= "Get top 3 tracks of each genre")
+@app.get("/popular_genre", summary="Get top 3 tracks of each genre")
 async def get_popular_genre_tracks():
     cursor = app.mongodb.tracks.find({})
 
@@ -817,4 +819,3 @@ async def get_common_likes_friends(user_name: str):
             likes_friend[friend] = find_common_elements(friend_obj["liked_songs"], user["liked_songs"])
 
     return likes_friend
-
