@@ -3,7 +3,7 @@ branch-defaults:
     environment: musicee-dev
     group_suffix: null
 global:
-  application_name: musicee-cloud-backend
+  application_name: musicee-backend
   branch: null
   default_ec2_keyname: aws-eb
   default_platform: Docker
