@@ -1,4 +1,4 @@
-# CS 308 Term Project - Musicee (Back-End)
+# Musicee (Back-End)
 
 ## Project Overview
 
