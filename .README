@@ -10,5 +10,6 @@ docker ps
 ### You can stop any running Docker images:
 docker stop <image-name-here>
 
+
 ### You can remove any inactive Docker images:
 docker rm <image-name-here>
