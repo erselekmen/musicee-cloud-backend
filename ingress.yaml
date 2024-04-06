@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: "musicee-cloud-ingress"
+  annotations:
+    alb.ingress.kubernetes.io/target-type: ip
+  labels:
+    app: java-microservice
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: "musicee-cloud-service"
+            port:
+              number: 8080
