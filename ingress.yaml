@@ -5,7 +5,7 @@ metadata:
   annotations:
     alb.ingress.kubernetes.io/target-type: ip
   labels:
-    app: java-microservice
+    app: musicee-api
 spec:
   ingressClassName: alb
   rules:
@@ -17,4 +17,4 @@ spec:
           service:
             name: "musicee-cloud-service"
             port:
-              number: 8080
+              number: 80
