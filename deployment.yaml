@@ -13,7 +13,7 @@ spec:
         app.kubernetes.io/name: musicee-api
     spec:
       containers:
-      - name: musicee-cloud-api
+      - name: musicee-cluster
         image: 110975517810.dkr.ecr.eu-central-1.amazonaws.com/musicee-cloud-api:latest
         ports:
         - containerPort: 8080
