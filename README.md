@@ -9,7 +9,8 @@
   - Kubernetes
   - Python
   - Docker
-  - Circle CI (upcoming)
+  - MongoDB
+  - CircleCI (upcoming)
   - eksctl, kubectl
 
 ## Project Overview
