@@ -2,10 +2,6 @@ __pycache__
 
 .DS_Store
 
-dummy.txt
-
-tracks.json
-
-rand_song_gen.py
+trust-policy.json
 
 venv
