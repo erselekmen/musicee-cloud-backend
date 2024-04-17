@@ -1,5 +1,17 @@
 # Musicee (Back-End)
 
+## Techstack:
+  - Amazon Web Services (AWS):
+    - Elastic Kubernetes Service (EKS)
+    - Elastic Load Balancer (ELB)
+    - Elastic Compute Cloud (EC2)
+    - Elastic Container Registery (ECR)
+  - Kubernetes
+  - Python
+  - Docker
+  - Circle CI (upcoming)
+  - eksctl, kubectl
+
 ## Project Overview
 
 This project aims to develop an online system for collecting liked-song information from various sources and providing users with analyses and recommendations based on their musical preferences. 
