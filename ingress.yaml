@@ -1,11 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: "musicee-cloud-ingress"
+  name: "msc-service-ingress"
   annotations:
     alb.ingress.kubernetes.io/target-type: ip
   labels:
-    app: musicee-api
+    app: msc-service
 spec:
   ingressClassName: alb
   rules:
@@ -15,6 +15,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: "musicee-cloud-service"
+            name: "msc-eks-service"
             port:
               number: 80
