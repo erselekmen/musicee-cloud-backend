@@ -33,7 +33,7 @@ API_URL = "http://musicee.us-west-2.elasticbeanstalk.com"
 
 @app.get("/api/health")
 def root():
-    return {"message": "Welcome to Musicee API\n"}
+    return {"message": "Welcome to Musicee API V3"}
 
 
 @app.post('/user/signup', summary="Create new user")
