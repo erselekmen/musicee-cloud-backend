@@ -5,7 +5,7 @@
     - Elastic Kubernetes Service (EKS)
     - Elastic Load Balancer (ELB)
     - Elastic Compute Cloud (EC2)
-    - Elastic Container Registery (ECR)
+    - Elastic Container Registry (ECR)
   - Kubernetes
   - Python
   - Docker
