@@ -21,7 +21,15 @@ spec:
         - name: config
           mountPath: /vault/config
         command: ["vault", "server", "-config=/vault/config/vault.hcl"]
-      volumes:
-      - name: config
-        configMap:
-          name: vault-config
+  volumeClaimTemplates:
+  - metadata:
+      name: config
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: "standard"
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
