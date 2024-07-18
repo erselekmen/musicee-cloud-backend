@@ -18,10 +18,24 @@ spec:
       - name: consul
         image: hashicorp/consul:latest
         volumeMounts:
-        - name: config
-          mountPath: /consul/config
-        command: ["consul", "agent", "-config-file=/consul/config/consul.hcl"]
-      volumes:
-      - name: config
-        configMap:
-          name: consul-config
+        - name: consul-data
+          mountPath: /consul/data
+  volumeClaimTemplates:
+  - metadata:
+      name: consul-data
+    spec:
+      accessModes: ["ReadWriteMany"]
+      storageClassName: volume-sc
+      resources:
+        requests:
+          storage: 5Gi
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - consul
+          topologyKey: "kubernetes.io/hostname"
