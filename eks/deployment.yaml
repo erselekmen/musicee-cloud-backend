@@ -12,6 +12,7 @@ spec:
       labels:
         app.kubernetes.io/name: msc-service
     spec:
+      serviceAccountName: backend-service-account
       containers:
       - name: msc-service
         image: 110975517810.dkr.ecr.eu-central-1.amazonaws.com/msc-service-img:latest
