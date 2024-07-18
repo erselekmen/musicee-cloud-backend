@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: msc-service-deploy
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: msc-service
@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: msc-service
-        image: 110975517810.dkr.ecr.eu-central-1.amazonaws.com/msc-service-img:v1
+        image: 110975517810.dkr.ecr.eu-central-1.amazonaws.com/msc-service-img:latest
         ports:
         - containerPort: 8080
