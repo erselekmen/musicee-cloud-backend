@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vault
+  namespace: default
+spec:
+  serviceName: "vault"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vault
+  template:
+    metadata:
+      labels:
+        app: vault
+    spec:
+      containers:
+      - name: vault
+        image: hashicorp/vault:latest
+        volumeMounts:
+        - name: config
+          mountPath: /vault/config
+        command: ["vault", "server", "-config=/vault/config/vault.hcl"]
+      volumes:
+      - name: config
+        configMap:
+          name: vault-config

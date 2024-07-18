@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: consul
+  namespace: default
+spec:
+  serviceName: "consul"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consul
+  template:
+    metadata:
+      labels:
+        app: consul
+    spec:
+      containers:
+      - name: consul
+        image: hashicorp/consul:latest
+        volumeMounts:
+        - name: config
+          mountPath: /consul/config
+        command: ["consul", "agent", "-config-file=/consul/config/consul.hcl"]
+      volumes:
+      - name: config
+        configMap:
+          name: consul-config
