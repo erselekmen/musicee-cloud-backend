@@ -20,6 +20,28 @@ spec:
         volumeMounts:
         - name: consul-data
           mountPath: /consul/data
+        - name: config
+          mountPath: /consul/config
+        env:
+        - name: CONSUL_LOCAL_CONFIG
+          value: /consul/config/consul.hcl
+      volumes:
+      - name: consul-data
+        persistentVolumeClaim:
+          claimName: consul-data
+      - name: config
+        configMap:
+          name: consul-config
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - consul
+              topologyKey: "kubernetes.io/hostname"
   volumeClaimTemplates:
   - metadata:
       name: consul-data
@@ -29,13 +51,3 @@ spec:
       resources:
         requests:
           storage: 5Gi
-  affinity:
-    podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - consul
-          topologyKey: "kubernetes.io/hostname"
