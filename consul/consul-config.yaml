@@ -12,3 +12,11 @@ data:
     retry_join = ["provider=k8s label_selector=\"app=consul,component=server\""]
     ui = true
     server = true
+    acl {
+      enabled = true
+      default_policy = "allow"
+      enable_token_persistence = true
+      tokens {
+        agent = "your-agent-token"
+      }
+    }
