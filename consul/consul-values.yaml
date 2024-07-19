@@ -12,3 +12,7 @@ connectInject:
   enabled: true
   webhookCert:
     secretName: consul-connect-inject-webhook-cert
+acl:
+  enabled: true
+  defaultPolicy: deny
+  enableTokenPersistence: true
