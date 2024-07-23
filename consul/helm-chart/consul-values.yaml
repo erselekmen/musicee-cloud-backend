@@ -12,20 +12,12 @@ ui:
   enabled: true
 
 server:
-  replicas: 1
-  bootstrapExpect: 1
+  replicas: 3
+  bootstrapExpect: 3
   acls:
-    manageSystemACLs: true
+    manageSystemACLs: yes
   connectInject:
-    enabled: true
-  extraConfig: |
-    {
-      "acl": {
-        "enabled": true,
-        "default_policy": "allow",
-        "enable_token_persistence": true
-      }
-    }
+    enabled: false
   persistence:
     enabled: true
     size: 10Gi
