@@ -1,0 +1,43 @@
+global:
+  name: consul
+  datacenter: dc1
+  acls:
+    manageSystemACLs: true
+
+client:
+  enabled: true
+  grpc: true
+
+ui:
+  enabled: true
+
+server:
+  replicas: 1
+  bootstrapExpect: 1
+  acls:
+    manageSystemACLs: true
+  connectInject:
+    enabled: true
+  extraConfig: |
+    {
+      "acl": {
+        "enabled": true,
+        "default_policy": "allow",
+        "enable_token_persistence": true
+      }
+    }
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: efs-sc
+    accessMode: ReadWriteMany
+
+uiService:
+  type: LoadBalancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"  # Use "alb" for Application Load Balancer
+  externalTrafficPolicy: Local
+
+serviceAccount:
+  create: false
+  name: consul-sa

@@ -1,0 +1,13 @@
+global:
+  enabled: true
+  tlsDisable: true
+server:
+  standalone:
+    enabled: true
+  ha:
+    enabled: false
+injector:
+  enabled: true
+serviceAccount:
+  create: false
+  name: vault-sa
