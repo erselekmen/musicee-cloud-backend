@@ -1,13 +1,49 @@
 global:
+  name: vault
   enabled: true
   tlsDisable: true
+
 server:
-  standalone:
-    enabled: true
-  ha:
-    enabled: false
-injector:
   enabled: true
-serviceAccount:
-  create: false
-  name: vault-sa
+  ha:
+    enabled: true
+    replicas: 1
+
+  dataStorage:
+    enabled: true
+    size: 10Gi
+    storageClass: efs-sc
+    accessMode: ReadWriteOnce
+
+  storage:
+    consul:
+      address: "consul-server.consul.svc.cluster.local:8500"
+
+  service_registration:
+    consul:
+      address: "consul-server.consul.svc.cluster.local:8500"
+
+  serviceAccount:
+    create: true
+    name: vault
+
+  ui:
+    enabled: true
+
+  extraEnvironmentVars:
+    VAULT_LOCAL_CONFIG: |
+      ui = true
+
+      listener "tcp" {
+        address     = "0.0.0.0:8200"
+        tls_disable = true
+      }
+
+      storage "consul" {
+        address = "consul-server.consul.svc.cluster.local:8500"
+        path    = "vault"
+      }
+
+      service_registration "consul" {
+        address = "consul-server.consul.svc.cluster.local:8500"
+      }
