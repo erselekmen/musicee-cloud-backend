@@ -27,7 +27,7 @@ server:
 uiService:
   type: LoadBalancer
   annotations:
-    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"  # Use "alb" for Application Load Balancer
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
   externalTrafficPolicy: Local
 
 serviceAccount:
