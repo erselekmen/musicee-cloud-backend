@@ -4,9 +4,26 @@
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::110975517810:oidc-provider/oidc.eks.eu-central-1.amazonaws.com/id/<OIDC_ID_HERE>"
+        "Federated": "arn:aws:iam::110975517810:oidc-provider/oidc.eks.eu-central-1.amazonaws.com/id/91C2812CA69E59A3F5AEAB6C3726FA9C"
       },
-      "Action": "sts:AssumeRoleWithWebIdentity"
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "oidc.eks.eu-central-1.amazonaws.com/id/91C2812CA69E59A3F5AEAB6C3726FA9C:sub": "system:serviceaccount:vault:vault-sa"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::110975517810:oidc-provider/oidc.eks.eu-central-1.amazonaws.com/id/91C2812CA69E59A3F5AEAB6C3726FA9C"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "oidc.eks.eu-central-1.amazonaws.com/id/91C2812CA69E59A3F5AEAB6C3726FA9C:sub": "system:serviceaccount:consul:consul-sa"
+        }
+      }
     }
   ]
 }
