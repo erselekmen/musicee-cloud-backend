@@ -5,45 +5,40 @@ global:
 
 server:
   enabled: true
+  extraEnvironmentVars:
+    VAULT_ADDR: "http://127.0.0.1:8200"
+
   ha:
     enabled: true
-    replicas: 1
-
-  dataStorage:
-    enabled: true
-    size: 10Gi
-    storageClass: efs-sc
-    accessMode: ReadWriteOnce
-
-  storage:
-    consul:
-      address: "consul-server.consul.svc.cluster.local:8500"
-
-  service_registration:
-    consul:
-      address: "consul-server.consul.svc.cluster.local:8500"
-
-  serviceAccount:
-    create: true
-    name: vault
-
-  ui:
-    enabled: true
-
-  extraEnvironmentVars:
-    VAULT_LOCAL_CONFIG: |
+    replicas: 3
+    config: |
       ui = true
 
       listener "tcp" {
         address     = "0.0.0.0:8200"
-        tls_disable = true
+        cluster_address = "0.0.0.0:8201"
+        tls_disable = 1
       }
 
       storage "consul" {
         address = "consul-server.consul.svc.cluster.local:8500"
-        path    = "vault"
+        path    = "vault/"
       }
 
-      service_registration "consul" {
-        address = "consul-server.consul.svc.cluster.local:8500"
-      }
+      api_addr = "http://vault-active.vault.svc.cluster.local:8200"
+      cluster_addr = "http://vault-active.vault.svc.cluster.local:8201"
+      disable_mlock = true
+
+    dataStorage:
+      enabled: true
+      size: 10Gi
+      storageClass: efs-sc
+      accessMode: ReadWriteOnce
+
+ui:
+  enabled: true
+
+service:
+  type: LoadBalancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
