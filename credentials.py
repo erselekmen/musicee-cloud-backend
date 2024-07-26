@@ -29,10 +29,10 @@ def connect_to_mysql(host, user, password, database):
 
 
 def main():
-    vault_url = 'a6e62195f6e8c4599bc28b66962030ce-3eb8dbb9a66ef28b.elb.eu-central-1.amazonaws.com:8200'
+    vault_url = 'http://a6e62195f6e8c4599bc28b66962030ce-3eb8dbb9a66ef28b.elb.eu-central-1.amazonaws.com:8200'
     vault_role = 'my-role'
-    vault_token = 'your-vault-token'
-    mysql_host = '192.168.23.43'
+    vault_token = ''
+    mysql_host = '18.159.216.135'
     mysql_database = 'mysql'
 
     client = hvac.Client(url=vault_url, token=vault_token)
