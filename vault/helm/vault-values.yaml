@@ -8,6 +8,12 @@ server:
   extraEnvironmentVars:
     VAULT_ADDR: "http://127.0.0.1:8200"
 
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 3
+
   ha:
     enabled: true
     replicas: 3
