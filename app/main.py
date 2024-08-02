@@ -1,5 +1,5 @@
 from fastapi.exception_handlers import HTTPException
-from fastapi import status, File, UploadFile
+from fastapi import status
 from fastapi.middleware.cors import CORSMiddleware
 from app.db import *
 from app.schema import *
