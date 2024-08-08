@@ -22,7 +22,7 @@ server:
   healthChecks:
     readinessProbe:
       httpGet:
-        path: /v1/kv/success?raw
+        path: /v1/status/leader
         port: 8500
       initialDelaySeconds: 5
       periodSeconds: 10
