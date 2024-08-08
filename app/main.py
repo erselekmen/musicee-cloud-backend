@@ -28,6 +28,10 @@ def root():
 @app.post('/user/signup', summary="Create new user")
 async def create_user(data: User):
     connection = await get_mysql_connection()
+
+    if connection is None:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
     async with connection.cursor() as cursor:
         await cursor.execute("SELECT * FROM users WHERE username=%s OR email=%s", (data.username, data.email))
         existing_user = await cursor.fetchone()
@@ -43,10 +47,9 @@ async def create_user(data: User):
 
     async with connection.cursor() as cursor:
         await cursor.execute(
-            "INSERT INTO users (username, email, password, friends, liked_songs, liked_songs_date, playlist, comment) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-            (user["username"], user["email"], user["password"], str(user["friends"]), str(user["liked_songs"]),
-             str(user["liked_songs_date"]), str(user["playlist"]), str(user["comment"]))
+            "INSERT INTO users (username, email, password) "
+            "VALUES (%s, %s, %s)",
+            (user["username"], user["email"], user["password"])
         )
 
     return {
@@ -94,12 +97,7 @@ async def get_all_users():
         for user in users:
             user_list.append({
                 "username": user["username"],
-                "email": user["email"],
-                "friends": user["friends"],
-                "liked_songs": user["liked_songs"],
-                "liked_songs_date": user["liked_songs_date"],
-                "playlist": user["playlist"],
-                "comment": user["comment"]
+                "email": user["email"]
             })
         return user_list
     else:
@@ -116,13 +114,7 @@ async def get_user_details(username: str):
     if user:
         return {
             "username": user["username"],
-            "email": user["email"],
-            "friends": user["friends"],
-            "liked_songs": user["liked_songs"],
-            "liked_songs_date": user["liked_songs_date"],
-            "playlist": user["playlist"],
-            "comment": user["comment"]
-        }
+            "email": user["email"]        }
     else:
         raise HTTPException(status_code=404, detail=f"User with username {username} not found")
 
