@@ -114,7 +114,8 @@ async def get_user_details(username: str):
     if user:
         return {
             "username": user["username"],
-            "email": user["email"]        }
+            "email": user["email"]
+        }
     else:
         raise HTTPException(status_code=404, detail=f"User with username {username} not found")
 
