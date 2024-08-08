@@ -1,8 +1,7 @@
-from fastapi.exception_handlers import HTTPException
-from fastapi import status
+from fastapi import HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from app.db import *
-from app.schema import *
+from app.db import app, get_mysql_connection
+from app.schema import User, UserLogin
 from app.utils import (
     get_hashed_password,
     create_access_token,
@@ -20,8 +19,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_URL = "http://musicee.us-west-2.elasticbeanstalk.com"
-
 
 @app.get("/api/health")
 def root():
@@ -30,23 +27,27 @@ def root():
 
 @app.post('/user/signup', summary="Create new user")
 async def create_user(data: User):
-    existing_username = await app.mongodb.users.find_one({"username": data.username})
+    connection = await get_mysql_connection()
+    async with connection.cursor() as cursor:
+        await cursor.execute("SELECT * FROM users WHERE username=%s OR email=%s", (data.username, data.email))
+        existing_user = await cursor.fetchone()
 
-    if existing_username:
+    if existing_user:
         raise HTTPException(status_code=400, detail="Email or username already exists")
 
     user = {
         "username": data.username,
         "email": data.email,
-        "password": get_hashed_password(data.password),
-        "friends": [],
-        "liked_songs": [],
-        "liked_songs_date": [],
-        "playlist": [],
-        "comment": []
+        "password": get_hashed_password(data.password)
     }
 
-    await app.mongodb.users.insert_one(user)
+    async with connection.cursor() as cursor:
+        await cursor.execute(
+            "INSERT INTO users (username, email, password, friends, liked_songs, liked_songs_date, playlist, comment) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            (user["username"], user["email"], user["password"], str(user["friends"]), str(user["liked_songs"]),
+             str(user["liked_songs_date"]), str(user["playlist"]), str(user["comment"]))
+        )
 
     return {
         "username": data.username,
@@ -57,7 +58,11 @@ async def create_user(data: User):
 
 @app.post('/user/login', summary="Create access and refresh tokens for user")
 async def login(data: UserLogin):
-    user = await app.mongodb.users.find_one({"username": data.username})
+    connection = await get_mysql_connection()
+    async with connection.cursor() as cursor:
+        await cursor.execute("SELECT * FROM users WHERE username=%s", (data.username,))
+        user = await cursor.fetchone()
+
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -79,13 +84,23 @@ async def login(data: UserLogin):
 
 @app.get("/users/all", summary="Get all users")
 async def get_all_users():
-    users = app.mongodb.users.find({})
+    connection = await get_mysql_connection()
+    async with connection.cursor() as cursor:
+        await cursor.execute("SELECT * FROM users")
+        users = await cursor.fetchall()
 
     if users:
         user_list = []
-        async for document in users:
-            del document['_id']
-            user_list.append(document)
+        for user in users:
+            user_list.append({
+                "username": user["username"],
+                "email": user["email"],
+                "friends": user["friends"],
+                "liked_songs": user["liked_songs"],
+                "liked_songs_date": user["liked_songs_date"],
+                "playlist": user["playlist"],
+                "comment": user["comment"]
+            })
         return user_list
     else:
         raise HTTPException(status_code=404, detail="No users found in the database")
@@ -93,20 +108,21 @@ async def get_all_users():
 
 @app.get("/users/get_user_details/{username}", summary="List all user details")
 async def get_user_details(username: str):
-    user = await app.mongodb.users.find_one({"username": username})
+    connection = await get_mysql_connection()
+    async with connection.cursor() as cursor:
+        await cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
+        user = await cursor.fetchone()
 
     if user:
         return {
             "username": user["username"],
             "email": user["email"],
-            "friends": user.get("friends", []),
-            "liked_songs": user.get("liked_songs", []),
-            "liked_songs_date": user.get("liked_songs_date", []),
-            "playlist": user.get("playlist", []),
-            "comment": user.get("comment", []),
-
+            "friends": user["friends"],
+            "liked_songs": user["liked_songs"],
+            "liked_songs_date": user["liked_songs_date"],
+            "playlist": user["playlist"],
+            "comment": user["comment"]
         }
-
     else:
         raise HTTPException(status_code=404, detail=f"User with username {username} not found")
 
