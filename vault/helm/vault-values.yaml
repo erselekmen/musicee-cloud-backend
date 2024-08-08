@@ -30,7 +30,7 @@ server:
         address = "consul-server.consul.svc.cluster.local:8500"
         path    = "vault/"
       }
-      
+
       seal "awskms" {
         region     = "eu-central-1"
         kms_key_id = "8c8bfb2c-2212-4087-a279-8be6cd95d624"
@@ -39,6 +39,33 @@ server:
       api_addr = "http://vault-active.vault.svc.cluster.local:8200"
       cluster_addr = "http://vault-active.vault.svc.cluster.local:8201"
       disable_mlock = true
+
+    readinessProbe:
+      httpGet:
+        path: /v1/sys/health
+        port: 8200
+        httpHeaders:
+        - name: "X-Vault-Token"
+          value: ""
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 1000
+      failureThreshold: 5
+      successThreshold: 1
+
+    livenessProbe:
+      httpGet:
+        path: /v1/sys/health
+        port: 8200
+        httpHeaders:
+        - name: "X-Vault-Token"
+          value: ""
+        httpSuccessStatuses: "200,429"
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 100
+      failureThreshold: 5
+      successThreshold: 1
 
     dataStorage:
       enabled: true
