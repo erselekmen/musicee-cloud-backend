@@ -6,6 +6,9 @@
     - Elastic Load Balancer (ELB)
     - Elastic Compute Cloud (EC2)
     - Elastic Container Registry (ECR)
+  - HashiCorp:
+    - Consul
+    - Vault
   - Kubernetes
   - Python
   - Docker
