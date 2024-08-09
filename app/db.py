@@ -48,15 +48,15 @@ async def connect_to_mysql(host, port, user, password, database):
             user=user,
             password=password,
             db=database,
+            cursorclass=aiomysql.DictCursor,  # Use DictCursor
             autocommit=True
         )
-        print(f"Connected to database: {database}")
-        logging.info(f"Connected to database: {database}")
-    except Exception as err:
-        print(f"Error: {err}")
+        logging.info(f"Connected to database: {database} at {host}:{port} with user {user}")
+    except aiomysql.Error as err:
         logging.error(f"Error connecting to database: {err}")
         connection = None
     return connection
+
 
 
 @app.on_event("startup")
@@ -87,4 +87,5 @@ async def get_mysql_connection():
             return None
         app.mysql_connection = await connect_to_mysql(mysql_host, mysql_port, db_username, db_password, mysql_database)
     return app.mysql_connection
+
 
