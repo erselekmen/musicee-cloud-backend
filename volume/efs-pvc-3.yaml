@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-consul-consul-consul-server-2
+  name: data-consul-consul-server-2
   namespace: consul
 spec:
   accessModes:
