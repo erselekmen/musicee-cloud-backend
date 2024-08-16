@@ -3,8 +3,6 @@ image: "hashicorp/consul:1.19.1"
 global:
   name: consul
   datacenter: dc1
-  acls:
-    manageSystemACLs: true
 
 ui:
   enabled: true
@@ -12,34 +10,11 @@ ui:
 server:
   replicas: 3
   bootstrapExpect: 3
-
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 0
       maxSurge: 3
-
-  healthChecks:
-    readinessProbe:
-      httpGet:
-        path: /v1/status/leader
-        port: 8500
-      initialDelaySeconds: 5
-      periodSeconds: 10
-      timeoutSeconds: 5
-      failureThreshold: 3
-      successThreshold: 1
-
-    livenessProbe:
-      httpGet:
-        path: /v1/status/leader
-        port: 8500
-      initialDelaySeconds: 5
-      periodSeconds: 10
-      timeoutSeconds: 5
-      failureThreshold: 3
-      successThreshold: 1
-
   acls:
     manageSystemACLs: yes
   persistence:
@@ -47,6 +22,30 @@ server:
     size: 10Gi
     storageClass: efs-sc
     accessMode: ReadWriteMany
+  securityContext:
+    runAsUser: 1000
+    fsGroup: 1000
+
+#  healthChecks:
+#    readinessProbe:
+#      httpGet:
+#        path: /v1/status/leader
+#        port: 8500
+#      initialDelaySeconds: 5
+#      periodSeconds: 10
+#      timeoutSeconds: 5
+#      failureThreshold: 3
+#      successThreshold: 1
+#
+#    livenessProbe:
+#      httpGet:
+#        path: /v1/status/leader
+#        port: 8500
+#      initialDelaySeconds: 5
+#      periodSeconds: 10
+#      timeoutSeconds: 5
+#      failureThreshold: 3
+#      successThreshold: 1
 
 uiService:
   type: LoadBalancer
@@ -57,3 +56,4 @@ uiService:
 serviceAccount:
   create: true
   name: consul-sa
+
