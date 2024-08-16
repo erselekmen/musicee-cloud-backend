@@ -4,24 +4,24 @@
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::110975517810:oidc-provider/oidc.eks.eu-central-1.amazonaws.com/id/91C2812CA69E59A3F5AEAB6C3726FA9C"
+        "Federated": "arn:aws:iam::110975517810:oidc-provider/oidc.eks.eu-central-1.amazonaws.com/id/91B2201BADD7F83EDA2C99162D11BB7D"
       },
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "oidc.eks.eu-central-1.amazonaws.com/id/91C2812CA69E59A3F5AEAB6C3726FA9C:sub": "system:serviceaccount:vault:vault-sa"
+          "oidc.eks.eu-central-1.amazonaws.com/id/91B2201BADD7F83EDA2C99162D11BB7D:sub": "system:serviceaccount:vault:vault-sa"
         }
       }
     },
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::110975517810:oidc-provider/oidc.eks.eu-central-1.amazonaws.com/id/91C2812CA69E59A3F5AEAB6C3726FA9C"
+        "Federated": "arn:aws:iam::110975517810:oidc-provider/oidc.eks.eu-central-1.amazonaws.com/id/91B2201BADD7F83EDA2C99162D11BB7D"
       },
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "oidc.eks.eu-central-1.amazonaws.com/id/91C2812CA69E59A3F5AEAB6C3726FA9C:sub": "system:serviceaccount:consul:consul-sa"
+          "oidc.eks.eu-central-1.amazonaws.com/id/91B2201BADD7F83EDA2C99162D11BB7D:sub": "system:serviceaccount:consul:consul-sa"
         }
       }
     }
